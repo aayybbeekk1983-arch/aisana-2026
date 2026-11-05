@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-SANA — білім беру платформасы</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ===== ҮЛКЕН ӘРІПТЕР (--fs арқылы реттеледі) ===== */
+        :root{--fs:1}
+        body{font-size:calc(17px*var(--fs));line-height:1.6}
+        .text-\[10px\]{font-size:calc(13px*var(--fs))!important;line-height:1.45!important}
+        .text-\[11px\]{font-size:calc(14px*var(--fs))!important;line-height:1.45!important}
+        .text-xs{font-size:calc(15px*var(--fs))!important;line-height:1.5!important}
+        .text-sm{font-size:calc(17px*var(--fs))!important;line-height:1.55!important}
+        .text-base{font-size:calc(19px*var(--fs))!important}
+        .text-lg{font-size:calc(22px*var(--fs))!important}
+        .text-xl{font-size:calc(25px*var(--fs))!important}
+        .text-2xl{font-size:calc(30px*var(--fs))!important}
+        .text-3xl{font-size:calc(36px*var(--fs))!important}
+        .text-4xl{font-size:calc(44px*var(--fs))!important}
+        input,textarea,select{font-size:calc(16px*var(--fs))}
+        .text-slate-400{color:#64748b!important}
+        .text-slate-500{color:#475569!important}
+        .text-slate-600{color:#334155!important}
+        #fs-ctrl button{font-size:15px!important;font-weight:800}
+
+        /* ===== СУРЕТТЕР / КӨРНЕКІЛІК ===== */
+        @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .float-anim{animation:floaty 4s ease-in-out infinite}
+        .subj-tile{transition:transform .2s,box-shadow .2s}
+        .subj-tile:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,.18)}
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans min-h-screen flex flex-col">
+
+    <!-- INITIAL LOAD SAFEGUARD & SCRIPT REPAIR -->
+    <script>
+        // Safe Lucide icon renderer without throwing runtime errors
+        function safeCreateIcons() {
+            try {
+                if (typeof lucide !== 'undefined' && lucide && typeof lucide.createIcons === 'function') {
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                console.warn('Lucide render suppressed:', err);
+            }
+        }
+
+        // Global safe state
+        window.currentUser = null;
+        window.currentRole = 'student';
+        window.activeTab = 'dashboard';
+    </script>
+
+    <!-- AUTH SCREEN (LOGIN / REGISTER) -->
+    <div id="auth-screen" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 relative border border-slate-100">
+            <!-- LOGO HEADER -->
+            <div class="text-center space-y-3">
+                <div class="w-20 h-20 mx-auto overflow-hidden rounded-2xl shadow-lg border border-slate-100 p-1 bg-white flex items-center justify-center">
+                    <img src="Gemini_Generated_Image_e579c0e579c0e579.jpg" alt="AI-SANA Logo" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.src='https://placehold.co/150x150/4f46e5/ffffff?text=AI-SANA';" />
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">AI-SANA</h2>
+                    <p class="text-xs text-slate-500">Кеңейтілген білім беру платформасына кіру</p>
+                </div>
+            </div>
+
+            <!-- LOGIN BOX -->
+            <div id="login-box" class="space-y-4">
+                <form onsubmit="handleLogin(event)" class="space-y-3">
+                    <div id="login-error" class="hidden p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold rounded-xl flex items-center space-x-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+                        <span id="login-error-text">Email немесе құпия сөз қате!</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email (Логин)</label>
+                        <input type="email" id="login-email" required value="asan@sana.kz" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="мысалы: asan@sana.kz" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Құпия сөз (Пароль)</label>
+                        <input type="password" id="login-password" required value="123456" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="••••••••" />
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-indigo-600/30 transition">
+                        Жүйеге кіру
+                    </button>
+                </form>
+
+                <div class="relative py-1">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                    <div class="relative flex justify-center text-[10px] uppercase"><span class="bg-white px-2 text-slate-400 font-semibold">Нақты Демо Аккаунттар</span></div>
+                </div>
+
+                <!-- PRESET ACCOUNT HELP -->
+                <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-[11px] space-y-1 text-slate-600">
+                    <p class="font-bold text-slate-800 text-[11px] border-b border-slate-200 pb-1">Тексеруге арналған дайын логин/парольдер:</p>
+                    <div class="flex justify-between items-center pt-0.5">
+                        <span>👨‍🎓 <b>Оқушы:</b> asan@sana.kz</span>
+                        <code class="bg-white px-1.5 py-0.5 rounded border font-mono text-[10px]">123456</code>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>👩‍🏫 <b>Мұғалім:</b> kairat@sana.kz</span>
+                        <code class="bg-white px-1.5 py-0.5 rounded border font-mono text-[10px]">123456</code>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span>⚙️ <b>Әкімші:</b> admin@sana.kz</span>
+                        <code class="bg-white px-1.5 py-0.5 rounded border font-mono text-[10px]">123456</code>
+                    </div>
+                </div>
+
+                <div class="text-center pt-1">
+                    <button onclick="toggleAuthMode('register')" class="text-xs text-indigo-600 font-semibold hover:underline">
+                        Аккаунтыңыз жоқ па? Жаңадан тіркелу
+                    </button>
+                </div>
+            </div>
+
+            <!-- REGISTER BOX -->
+            <div id="register-box" class="space-y-4 hidden">
+                <form onsubmit="handleRegister(event)" class="space-y-3">
+                    <div id="reg-error" class="hidden p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold rounded-xl flex items-center space-x-2">
+                        <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0"></i>
+                        <span id="reg-error-text">Бұл email жүйеде тіркеліп қойған! Басқа email таңдаңыз.</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Толық аты-жөні</label>
+                        <input type="text" id="reg-name" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs" placeholder="Жандос Есенов" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Email (Логин ретінде)</label>
+                        <input type="email" id="reg-email" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs" placeholder="zhandos@sana.kz" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Құпия сөз (Пароль орнату)</label>
+                        <input type="password" id="reg-password" required minlength="4" class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs" placeholder="Кем дегенде 4 символ" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Рөліңізді таңдаңыз</label>
+                        <select id="reg-role" class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs bg-white">
+                            <option value="student">Оқушы</option>
+                            <option value="teacher">Мұғалім</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Сынып / Пән</label>
+                        <input type="text" id="reg-grade" class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs" placeholder='9 "А" немесе Математика' />
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-indigo-600/30 transition">
+                        Тіркелу және Кіру
+                    </button>
+                </form>
+
+                <div class="text-center pt-1">
+                    <button onclick="toggleAuthMode('login')" class="text-xs text-indigo-600 font-semibold hover:underline">
+                        Бұрын тіркелгенсіз бе? Кіру
+                    </button>
+                </div>
+            </div>
+
+            <!-- EMERGENCY RESET -->
+            <div class="text-center pt-2 border-t border-slate-100">
+                <button onclick="forceResetSession()" class="text-[10px] text-slate-400 hover:text-rose-600 underline">
+                    Кіруде қате болса: Деректерді тазалап қайта жүктеу
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="main-app" class="hidden flex-1 flex flex-col">
+        <!-- TOP HEADER -->
+        <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-40 shadow-md">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-white p-0.5 shadow-md flex items-center justify-center overflow-hidden border border-slate-700">
+                        <img src="Gemini_Generated_Image_e579c0e579c0e579.jpg" alt="AI-SANA Logo" class="w-full h-full object-cover rounded-lg" onerror="this.onerror=null; this.src='https://placehold.co/100x100/4f46e5/ffffff?text=AI-SANA';" />
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
+                            AI-SANA
+                        </span>
+                        <span class="text-[10px] text-slate-400 block -mt-1 font-medium">Кеңейтілген білім платформасы</span>
+                    </div>
+                </div>
+
+                <!-- CURRENT USER BADGE & ROLE SWITCH -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:flex items-center space-x-3 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60">
+                        <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </div>
+                        <div class="text-left leading-tight">
+                            <p id="user-display-name" class="text-xs font-bold text-white">Пайдаланушы</p>
+                            <p id="user-display-role" class="text-[10px] text-slate-400">Оқушы</p>
+                        </div>
+                    </div>
+
+                    <button onclick="logout()" title="Жүйеден шығу" class="p-2 bg-slate-800 hover:bg-rose-600/80 text-slate-300 hover:text-white rounded-xl border border-slate-700/60 transition">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+
+                    <!-- ARCHITECTURE BUTTON -->
+                    <button onclick="toggleArchModal(true)" class="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs px-3 py-2 rounded-xl border border-indigo-500/30 transition">
+                        <i data-lucide="server" class="w-4 h-4 text-indigo-400"></i>
+                        <span class="hidden md:inline font-medium">Архитектура</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT BODY WITH SIDEBAR -->
+        <div class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
+            <!-- SIDEBAR -->
+            <aside class="w-64 flex-shrink-0 hidden md:block">
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80 sticky top-24 space-y-6">
+                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center space-x-3">
+                        <div class="p-2 bg-indigo-600 text-white rounded-xl font-bold text-xs">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <p id="user-display-grade" class="text-xs font-bold text-slate-800">9 "А" сыныбы</p>
+                            <p class="text-[10px] text-slate-500">Платформа белсенді</p>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC NAV -->
+                    <nav id="sidebar-nav" class="space-y-1">
+                        <!-- Navigation items injected via JS -->
+                    </nav>
+
+                    <div class="pt-4 border-t border-slate-100">
+                        <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 p-3 rounded-2xl border border-indigo-100 text-xs space-y-1">
+                            <div class="flex justify-between items-center text-indigo-900 font-bold">
+                                <span>Ұпай (XP):</span>
+                                <span id="user-display-xp" class="text-amber-600">840</span>
+                            </div>
+                            <div class="flex justify-between items-center text-indigo-900 font-bold">
+                                <span>Оқу сериясы:</span>
+                                <span id="user-display-streak" class="text-orange-600">5 күн</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- MAIN VIEWS -->
+            <main class="flex-1 min-w-0">
+                <div id="mobile-nav" class="md:hidden flex gap-2 overflow-x-auto pb-3 mb-3"></div>
+                <!-- 1. STUDENT VIEW -->
+                <div id="student-view" class="space-y-6">
+                    <!-- Dashboard Tab -->
+                    <div id="student-tab-dashboard" class="space-y-6">
+                        <div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-700 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+                                <div>
+                                    <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">Оқушы кабинеті</span>
+                                    <h2 class="text-2xl font-bold tracking-tight mt-1">Қош келдіңіз!</h2>
+                                    <p class="text-indigo-200 text-xs">AI-Sana сіздің жеке білім траекторияңызды бақылауда.</p>
+                                </div>
+                                <button onclick="switchTab('student', 'diagnostic')" class="bg-white text-indigo-700 hover:bg-indigo-50 font-bold px-4 py-2 rounded-xl text-xs shadow-md transition">
+                                    Диагностика тапсыру
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Roadmap summary -->
+                        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                            <h3 class="font-bold text-slate-800 text-base">Ұсынылған оқу модульдері</h3>
+                            <div class="space-y-3">
+                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 flex justify-between items-center">
+                                    <div>
+                                        <span class="text-[10px] font-bold text-indigo-600 uppercase">Математика</span>
+                                        <h4 class="font-bold text-slate-800 text-xs">Квадраттық теңдеулер</h4>
+                                    </div>
+                                    <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">85% өтілді</span>
+                                </div>
+                                <div class="p-4 bg-rose-50/50 rounded-2xl border border-rose-200 flex justify-between items-center">
+                                    <div>
+                                        <span class="text-[10px] font-bold text-rose-600 uppercase">Физика</span>
+                                        <h4 class="font-bold text-slate-800 text-xs">Ньютон заңдары</h4>
+                                    </div>
+                                    <button onclick="switchTab('student', 'ai-tutor')" class="bg-rose-600 text-white text-xs px-3 py-1.5 rounded-xl font-bold hover:bg-rose-700 transition">
+                                        AI Көмегі
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diagnostic Tab -->
+                    <div id="student-tab-diagnostic" class="hidden space-y-6">
+                        <div id="diag-select-box" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-4"></div>
+                        <div id="diag-quiz-box" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                                <div>
+                                    <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">Бастапқы диагностика (Барлық пәндер)</span>
+                                    <h2 id="diag-subject-title" class="text-lg font-bold text-slate-800 mt-1">Білім деңгейін анықтау</h2>
+                                </div>
+                                <span id="diag-q-number" class="text-xs text-slate-400 font-medium">Сұрақ 1 / 8</span>
+                            </div>
+
+                            <p id="diag-question-text" class="text-base font-semibold text-slate-800">Cұрақ жүктелуде...</p>
+
+                            <div id="diag-options-container" class="space-y-3">
+                                <!-- Dynamic Options -->
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t border-slate-100">
+                                <button id="diag-next-btn" disabled onclick="nextDiagStep()" class="bg-indigo-600 disabled:opacity-50 hover:bg-indigo-700 text-white font-semibold px-6 py-2.5 rounded-xl transition text-xs">
+                                    Келесі сұрақ
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="diag-result-box" class="hidden bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm text-center space-y-4">
+                            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                                <i data-lucide="award" class="w-8 h-8"></i>
+                            </div>
+                            <h2 class="text-xl font-bold text-slate-800">Кешенді диагностика сәтті аяқталды!</h2>
+                            <p class="text-xs text-slate-500">Барлық пәндер бойынша деңгейіңіз анықталып, жеке оқу бағытыңыз әзірленді.</p>
+                            <div id="diag-subject-breakdown" class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left pt-2">
+                                <!-- Dynamic Subject Result Breakdown -->
+                            </div>
+                            <button onclick="switchTab('student', 'roadmap')" class="bg-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs mt-2">
+                                Жеке оқу бағытын көру
+                            </button>
+                            <button onclick="startDiag()" class="border border-slate-200 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-xs mt-2 ml-2">Басқа диагностика таңдау</button>
+                        </div>
+                    </div>
+
+                    <!-- Roadmap Tab -->
+                    <div id="student-tab-roadmap" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Жеке оқу бағыты (AI Roadmap)</h2>
+                        <div class="space-y-3">
+                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-800">1. Квадрат теңдеулер мен дискриминант</p>
+                                    <p class="text-[10px] text-slate-500">Математика • Меңгерілді</p>
+                                </div>
+                                <span class="text-xs text-emerald-600 font-bold">100%</span>
+                            </div>
+                            <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-800">2. Динамика: Ньютон 2-заңы</p>
+                                    <p class="text-[10px] text-slate-500">Физика • Орташа деңгей</p>
+                                </div>
+                                <button onclick="switchTab('student', 'ai-tutor')" class="bg-amber-600 text-white text-xs px-3 py-1.5 rounded-xl font-bold">
+                                    Түсіндірме алу
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Tutor Tab -->
+                    <div id="student-tab-ai-tutor" class="hidden bg-white rounded-3xl border border-slate-200/80 shadow-sm h-[550px] flex flex-col overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-purple-50 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2 bg-indigo-600 text-white rounded-xl">
+                                    <i data-lucide="brain" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-xs">AI-Тәлімгер</h3>
+                                    <p class="text-[10px] text-emerald-600 font-medium"><span id="ai-status">Демо-режим</span></p>
+                                </div>
+                            </div>
+                            <button onclick="setAIEndpoint()" title="ЖИ сервері" class="text-[10px] font-bold text-indigo-600 border border-indigo-200 bg-white px-2.5 py-1 rounded-lg">⚙ ЖИ баптау</button>
+                        </div>
+
+                        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3">
+                            <div class="flex justify-start">
+                                <div class="max-w-[80%] bg-slate-100 rounded-2xl rounded-bl-none p-3 text-xs text-slate-800">
+                                    <p class="font-bold text-[10px] text-indigo-600 mb-0.5">AI-Тәлімгер</p>
+                                    Сәлем! Түсінбей жүрген тақырыбыңызды немесе сұрағыңызды қойыңыз.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-2 border-t border-slate-100 bg-slate-50/50 flex gap-1.5 overflow-x-auto text-[10px]">
+                            <button onclick="quickSend('Квадрат теңдеу формуласын түсіндірші')" class="bg-white border border-slate-200 px-2 py-1 rounded-full text-slate-600 whitespace-nowrap">💡 Теңдеулер</button>
+                            <button onclick="quickSend('Ньютонның 2-заңына мысал берші')" class="bg-white border border-slate-200 px-2 py-1 rounded-full text-slate-600 whitespace-nowrap">🍎 Физика мысал</button>
+                        </div>
+
+                        <div class="p-3 border-t border-slate-100 flex gap-2">
+                            <input type="text" id="chat-input" placeholder="Сұрақ қойыңыз..." class="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" onkeypress="if(event.key==='Enter') sendChatMessage()" />
+                            <button onclick="sendChatMessage()" class="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700 transition">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tasks Tab -->
+                    <div id="student-tab-tasks" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Тест тапсырмалары</h2>
+                        <div id="tasks-grid" class="space-y-3">
+                            <!-- Tasks content rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Library Tab -->
+                    <div id="student-tab-library" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Материалдар кітапханасы</h2>
+                        <div id="lib-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                    </div>
+
+                    <!-- Achievements Tab -->
+                    <div id="student-tab-achievements" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Жетістіктер мен Беделі</h2>
+                        <div id="ach-grid" class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-1">
+                                <span class="text-2xl">🚀</span>
+                                <h4 class="font-bold text-xs text-slate-800">Алғашқы қадам</h4>
+                                <p class="text-[10px] text-slate-500">Диагностика аяқталды</p>
+                            </div>
+                            <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-center space-y-1">
+                                <span class="text-2xl">🧠</span>
+                                <h4 class="font-bold text-xs text-slate-800">ЖИ Досы</h4>
+                                <p class="text-[10px] text-slate-500">Тәлімгермен сөйлестіңіз</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. TEACHER VIEW -->
+                <div id="teacher-view" class="hidden space-y-6">
+                    <div id="teacher-tab-classes" class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Сыныптар мен Оқушылар тізімі</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-slate-400 font-bold">
+                                        <th class="py-2">Оқушы</th>
+                                        <th class="py-2">Сынып</th>
+                                        <th class="py-2">Орташа ұпай</th>
+                                        <th class="py-2">Қиындық тудырған тақырып</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="classes-body" class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="py-2.5 font-bold text-slate-800">Асан Алмасов</td>
+                                        <td class="py-2.5 text-slate-600">9 "А"</td>
+                                        <td class="py-2.5 font-bold text-indigo-600">88%</td>
+                                        <td class="py-2.5 text-rose-600">Физика: Динамика</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2.5 font-bold text-slate-800">Динара Серікова</td>
+                                        <td class="py-2.5 text-slate-600">9 "А"</td>
+                                        <td class="py-2.5 font-bold text-emerald-600">94%</td>
+                                        <td class="py-2.5 text-slate-400">Жоқ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="teacher-tab-curriculum" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-3">
+                        <h2 class="text-xl font-bold text-slate-800">Оқу мақсаты мен Тақырып енгізу</h2>
+                        <input type="text" id="curriculum-input" value="9.2.2.1 - Квадрат теңдеулерді дискриминант арқылы шешу" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs" />
+                        <button onclick="saveCurriculum()" class="bg-purple-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Сақтау</button>
+                    </div>
+
+                    <div id="teacher-tab-generator" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">AI Тапсырма Генераторы</h2>
+                        <div class="flex gap-2">
+                            <input type="text" id="generator-topic-input" value="Квадрат теңдеулер" class="flex-1 border border-slate-200 rounded-xl p-2.5 text-xs" placeholder="Тақырыпты енгізіңіз..." />
+                            <button id="btn-generate-tasks" onclick="generateAITasks()" class="bg-purple-600 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i> Тапсырма жасау
+                            </button>
+                        </div>
+                        <div id="generated-tasks-container" class="hidden space-y-3 pt-3 border-t border-slate-100">
+                            <!-- Tasks injected via JS -->
+                        </div>
+                    </div>
+
+                    <div id="teacher-tab-monitoring" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Сынып Есебі</h2>
+                        <div id="monitoring-box" class="text-xs text-slate-500"></div>
+                    </div>
+
+                    <div id="teacher-tab-review" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">AI Материалдарын Тексеру</h2>
+                        <p class="text-xs text-slate-500">Оқушыларға жіберілмей тұрып растау қажет материалдар жоқ.</p>
+                    </div>
+                </div>
+
+                <!-- 3. ADMIN VIEW -->
+                <div id="admin-view" class="hidden space-y-6">
+                    <div id="admin-tab-users" class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Пайдаланушылар мен Рөлдер</h2>
+                        <div id="users-table" class="overflow-x-auto"></div>
+                        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-bold text-slate-700">
+                            <span id="users-count"></span>
+                        </div>
+                    </div>
+
+                    <div id="admin-tab-courses" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Пәндер мен Сыныптар</h2>
+                        <p class="text-xs text-slate-500">Математика, Физика, Информатика, Химия, Биология, Қазақ тілі, Ағылшын тілі, Тарих, География қосылған.</p>
+                    </div>
+
+                    <div id="admin-tab-security" class="hidden bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                        <h2 class="text-xl font-bold text-slate-800">Қауіпсіздік & AI Параметрлері</h2>
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold">
+                            API Кілттер прокси-сервер арқылы қорғалған.
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ARCHITECTURE MODAL -->
+    <div id="arch-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-4 shadow-2xl relative">
+            <button onclick="toggleArchModal(false)" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            <h2 class="text-xl font-bold text-slate-800">Серверлік Архитектура & AI Қауіпсіздік</h2>
+            <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-1">
+                <strong>Қауіпсіздік талабы:</strong>
+                <p>Клиенттік кодта құпия API кілтін сақтауға болмайды. Толық платформада барлық сұраныстар Node.js/Python сервері арқылы өтеді.</p>
+            </div>
+            <div class="pt-2 flex justify-end">
+                <button onclick="toggleArchModal(false)" class="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl">Жабу</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // PRESET ACCOUNTS DATABASE
+        const DEFAULT_USERS = [
+            { email: 'asan@sana.kz', pass: '123456', name: 'Асан Алмасов', role: 'student', grade: '9 "А"', subjects: 'Барлық пәндер', xp: 840, streak: 5 },
+            { email: 'kairat@sana.kz', pass: '123456', name: 'Қайрат Болатов', role: 'teacher', grade: '9 "А", 9 "Б"', subjects: 'Математика', xp: 0, streak: 0 },
+            { email: 'admin@sana.kz', pass: '123456', name: 'Салтанат Ахметова', role: 'admin', grade: 'Барлығы', subjects: 'Барлық пәндер', xp: 0, streak: 0 }
+        ];
+
+        // Get saved database or init with defaults
+        function getUsersDB() {
+            try {
+                const stored = localStorage.getItem('aisana_users_db');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch(e) {}
+            localStorage.setItem('aisana_users_db', JSON.stringify(DEFAULT_USERS));
+            return DEFAULT_USERS;
+        }
+
+        function saveUsersDB(db) {
+            try {
+                localStorage.setItem('aisana_users_db', JSON.stringify(db));
+            } catch(e) {}
+        }
+
+        // VIEW TOGGLES & SESSION MANAGERS
+        function showAuthScreen() {
+            const authScreen = document.getElementById('auth-screen');
+            const mainApp = document.getElementById('main-app');
+            if (authScreen) authScreen.classList.remove('hidden');
+            if (mainApp) mainApp.classList.add('hidden');
+            safeCreateIcons();
+        }
+
+        function showMainApp() {
+            const authScreen = document.getElementById('auth-screen');
+            const mainApp = document.getElementById('main-app');
+            if (authScreen) authScreen.classList.add('hidden');
+            if (mainApp) mainApp.classList.remove('hidden');
+
+            updateProfileUI();
+            renderSidebarNav();
+            switchRoleView(window.currentRole || 'student');
+            switchTab(window.currentRole, {student:'dashboard',teacher:'classes',admin:'users'}[window.currentRole]);
+            safeCreateIcons();
+        }
+
+        function loginSuccess(userObj) {
+            window.currentUser = userObj;
+            window.currentRole = userObj.role || 'student';
+            try {
+                localStorage.setItem('aisana_user', JSON.stringify(userObj));
+            } catch(e) {}
+            showMainApp();
+        }
+
+        function logout() {
+            try {
+                localStorage.removeItem('aisana_user');
+            } catch(e) {}
+            window.currentUser = null;
+            showAuthScreen();
+        }
+
+        function updateProfileUI() {
+            if (!window.currentUser) return;
+            const u = window.currentUser;
+            
+            const nameEl = document.getElementById('user-display-name');
+            const roleEl = document.getElementById('user-display-role');
+            const gradeEl = document.getElementById('user-display-grade');
+            const xpEl = document.getElementById('user-display-xp');
+            const streakEl = document.getElementById('user-display-streak');
+
+            if (nameEl) nameEl.textContent = u.name || 'Пайдаланушы';
+            if (roleEl) roleEl.textContent = u.role === 'student' ? 'Оқушы' : u.role === 'teacher' ? 'Мұғалім' : 'Әкімші';
+            if (gradeEl) gradeEl.textContent = u.grade || '9 "А" сыныбы';
+            if (xpEl) xpEl.textContent = (u.xp || 0) + ' XP';
+            if (streakEl) streakEl.textContent = (u.streak || 0) + ' күн';
+        }
+
+        function renderSidebarNav() {
+            const navContainer = document.getElementById('sidebar-nav');
+            if (!navContainer) return;
+
+            const role = window.currentRole || 'student';
+            let navs = [];
+
+            if (role === 'student') {
+                navs = [
+                    { id: 'dashboard', label: 'Жеке кабинет', icon: 'user' },
+                    { id: 'diagnostic', label: 'Бастапқы диагностика', icon: 'check-square' },
+                    { id: 'roadmap', label: 'Жеке оқу бағыты', icon: 'activity' },
+                    { id: 'ai-tutor', label: 'AI-тәлімгер (Чат)', icon: 'brain', badge: 'ЖИ' },
+                    { id: 'tasks', label: 'Тапсырмалар мен тесттер', icon: 'file-text' },
+                    { id: 'library', label: 'Материалдар кітапханасы', icon: 'book' },
+                    { id: 'achievements', label: 'Жетістіктер', icon: 'award' }
+                ];
+            } else if (role === 'teacher') {
+                navs = [
+                    { id: 'classes', label: 'Сыныптар мен Оқушылар', icon: 'users' },
+                    { id: 'curriculum', label: 'Оқу мақсаты', icon: 'layers' },
+                    { id: 'generator', label: 'AI Тапсырма жасау', icon: 'sparkles', badge: 'ЖИ' },
+                    { id: 'monitoring', label: 'Сынып есебі', icon: 'bar-chart-3' },
+                    { id: 'review', label: 'AI Тексеру', icon: 'check-circle' }
+                ];
+            } else {
+                navs = [
+                    { id: 'users', label: 'Пайдаланушылар', icon: 'users' },
+                    { id: 'courses', label: 'Пәндер мен Сыныптар', icon: 'book-open' },
+                    { id: 'security', label: 'Қауіпсіздік & AI', icon: 'shield-check' }
+                ];
+            }
+
+            navContainer.innerHTML = navs.map(item => `
+                <button data-nav="${item.id}" onclick="switchTab('${role}', '${item.id}')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    <div class="flex items-center space-x-2.5">
+                        <i data-lucide="${item.icon}" class="w-4 h-4 text-slate-400"></i>
+                        <span>${item.label}</span>
+                    </div>
+                    ${item.badge ? `<span class="bg-indigo-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase">${item.badge}</span>` : ''}
+                </button>
+            `).join('');
+            mirrorMobileNav();
+            safeCreateIcons();
+        }
+
+        function switchRoleView(role) {
+            window.currentRole = role;
+            const studentView = document.getElementById('student-view');
+            const teacherView = document.getElementById('teacher-view');
+            const adminView = document.getElementById('admin-view');
+
+            if (studentView) studentView.classList.add('hidden');
+            if (teacherView) teacherView.classList.add('hidden');
+            if (adminView) adminView.classList.add('hidden');
+
+            if (role === 'student' && studentView) studentView.classList.remove('hidden');
+            if (role === 'teacher' && teacherView) teacherView.classList.remove('hidden');
+            if (role === 'admin' && adminView) adminView.classList.remove('hidden');
+        }
+
+        function switchTab(role, tabId) {
+            const prefix = role + '-tab-';
+            const allTabs = document.querySelectorAll(`[id^="${prefix}"]`);
+            allTabs.forEach(t => t.classList.add('hidden'));
+
+            const target = document.getElementById(prefix + tabId);
+            if (target) target.classList.remove('hidden');
+            safeCreateIcons();
+        }
+
+        function toggleArchModal(show) {
+            const modal = document.getElementById('arch-modal');
+            if (modal) {
+                if (show) modal.classList.remove('hidden');
+                else modal.classList.add('hidden');
+            }
+        }
+
+        // INITIALIZATION
+        window.onload = function() {
+            try {
+                safeCreateIcons();
+                getUsersDB(); // Ensure DB is seeded
+                checkSavedSession();
+            } catch (err) {
+                console.error("Initialization error:", err);
+                forceResetSession();
+            }
+        };
+
+        // FORCE RESET EMERGENCY FUNCTION
+        function forceResetSession() {
+            try {
+                localStorage.removeItem('aisana_user');
+                localStorage.removeItem('aisana_users_db');
+            } catch(e) {}
+            window.currentUser = null;
+            window.currentRole = 'student';
+            showAuthScreen();
+        }
+
+        // CHECK LOCALSTORAGE SESSION
+        function checkSavedSession() {
+            try {
+                const saved = localStorage.getItem('aisana_user');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.name && parsed.role) {
+                        window.currentUser = parsed;
+                        window.currentRole = parsed.role || 'student';
+                        showMainApp();
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.warn("Corrupted session cleared");
+            }
+            showAuthScreen();
+        }
+
+        // SWITCH AUTH MODE
+        function toggleAuthMode(mode) {
+            try {
+                const loginBox = document.getElementById('login-box');
+                const registerBox = document.getElementById('register-box');
+                const loginErr = document.getElementById('login-error');
+                const regErr = document.getElementById('reg-error');
+                
+                if (loginErr) loginErr.classList.add('hidden');
+                if (regErr) regErr.classList.add('hidden');
+
+                if (mode === 'register') {
+                    if(loginBox) loginBox.classList.add('hidden');
+                    if(registerBox) registerBox.classList.remove('hidden');
+                } else {
+                    if(registerBox) registerBox.classList.add('hidden');
+                    if(loginBox) loginBox.classList.remove('hidden');
+                }
+                safeCreateIcons();
+            } catch(e) {
+                console.error("toggleAuthMode error", e);
+            }
+        }
+
+        // REAL LOGIN WITH EMAIL & PASSWORD CHECK
+        function handleLogin(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            
+            const emailInput = document.getElementById('login-email');
+            const passInput = document.getElementById('login-password');
+            const errorBox = document.getElementById('login-error');
+            const errorText = document.getElementById('login-error-text');
+
+            if (!emailInput || !passInput) return;
+
+            const email = emailInput.value.trim().toLowerCase();
+            const password = passInput.value.trim();
+
+            const db = getUsersDB();
+            const foundUser = db.find(u => u.email.toLowerCase() === email);
+
+            if (!foundUser) {
+                if (errorBox) {
+                    errorBox.classList.remove('hidden');
+                    if (errorText) errorText.textContent = "Мұндай email тіркелмеген!";
+                }
+                return;
+            }
+
+            if (foundUser.pass !== password) {
+                if (errorBox) {
+                    errorBox.classList.remove('hidden');
+                    if (errorText) errorText.textContent = "Құпия сөз (пароль) қате! Қайта тексеріңіз.";
+                }
+                return;
+            }
+
+            if (errorBox) errorBox.classList.add('hidden');
+            loginSuccess(foundUser);
+        }
+
+        // HANDLE MANUAL REGISTER WITH STRICT DUPLICATE EMAIL CHECK
+        function handleRegister(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            
+            const nameEl = document.getElementById('reg-name');
+            const emailEl = document.getElementById('reg-email');
+            const passEl = document.getElementById('reg-password');
+            const roleEl = document.getElementById('reg-role');
+            const gradeEl = document.getElementById('reg-grade');
+            const regErr = document.getElementById('reg-error');
+            const regErrText = document.getElementById('reg-error-text');
+
+            const name = nameEl ? nameEl.value.trim() : '';
+            const email = emailEl ? emailEl.value.trim().toLowerCase() : '';
+            const pass = passEl ? passEl.value.trim() : '';
+            const role = roleEl ? roleEl.value : 'student';
+            const grade = gradeEl && gradeEl.value.trim() ? gradeEl.value.trim() : (role === 'student' ? '9 "А"' : 'Математика');
+
+            if (!email || !pass || !name) {
+                if (regErr) {
+                    regErr.classList.remove('hidden');
+                    if (regErrText) regErrText.textContent = "Барлық өрісті толтырыңыз!";
+                }
+                return;
+            }
+
+            const db = getUsersDB();
+            // Strict duplicate email check (case-insensitive & trimmed)
+            const exists = db.some(u => u.email.trim().toLowerCase() === email);
+
+            if (exists) {
+                if (regErr) {
+                    regErr.classList.remove('hidden');
+                    if (regErrText) regErrText.textContent = "Бұл email жүйеде тіркеліп қойған! Басқа email кіргізіңіз немесе Кіру бетіне өтіңіз.";
+                }
+                safeCreateIcons();
+                return;
+            }
+
+            const newUser = {
+                name: name,
+                email: email,
+                pass: pass,
+                role: role,
+                grade: grade,
+                subjects: role === 'student' ? 'Барлық пәндер' : 'Барлық пәндер',
+                xp: role === 'student' ? 100 : 0,
+                streak: role === 'student' ? 1 : 0
+            };
+
+            db.push(newUser);
+            saveUsersDB(db);
+
+            if (regErr) regErr.classList.add('hidden');
+            loginSuccess(newUser);
+        }
+
+        // QUICK CHAT SEND
+        function quickSend(text) {
+            const input = document.getElementById('chat-input');
+            if (input) {
+                input.value = text;
+                sendChatMessage();
+            }
+        }
+    </script>
+<script>
+// ===== ТҮЗЕТУЛЕР МЕН ЖЕТІСПЕГЕН ФУНКЦИЯЛАР =====
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+function toast(msg){const d=document.createElement('div');d.className='fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl z-[60]';d.textContent=msg;document.body.appendChild(d);setTimeout(()=>d.remove(),2200);}
+function persist(mut){const u=window.currentUser;if(!u)return;mut(u);const db=getUsersDB();const i=db.findIndex(x=>x.email===u.email);if(i>-1)db[i]=u;saveUsersDB(db);try{localStorage.setItem('aisana_user',JSON.stringify(u));}catch(e){}updateProfileUI();}
+function mirrorMobileNav(){const m=$('mobile-nav'),n=$('sidebar-nav');if(m&&n)m.innerHTML=n.innerHTML.replace(/w-full/g,'flex-shrink-0 whitespace-nowrap gap-2 bg-white border border-slate-200');}
+const _sw=switchTab;
+switchTab=function(role,id){
+  _sw(role,id);
+  document.querySelectorAll('[data-nav]').forEach(b=>{const on=b.dataset.nav===id;b.classList.toggle('bg-indigo-50',on);b.classList.toggle('text-indigo-700',on);b.classList.toggle('text-slate-600',!on);});
+  const h={diagnostic:startDiag,roadmap:renderRoadmap,tasks:renderTasks,achievements:renderAch,classes:renderClasses,monitoring:renderMon,users:renderUsers,curriculum:loadCurriculum}[id];
+  if(h)h();safeCreateIcons();
+};
+// ---- ДИАГНОСТИКА ----
+const DIAG=[
+{s:'Математика',q:'x² − 16 = 0 теңдеуінің түбірлері қандай?',o:['±4','4','±8','16'],a:0},
+{s:'Математика',q:'x² − 5x + 6 = 0 теңдеуінің дискриминанты неге тең?',o:['25','1','49','5'],a:1},
+{s:'Физика',q:'Ньютонның 2-заңының формуласы қайсы?',o:['F = m·a','F = m/a','F = a/m','F = m+a'],a:0},
+{s:'Физика',q:'Массасы 2 кг денеге 10 Н күш әсер етсе, үдеуі қандай?',o:['20 м/с²','5 м/с²','0,2 м/с²','12 м/с²'],a:1},
+{s:'Информатика',q:'1 байт неше бит?',o:['4','8','16','10'],a:1},
+{s:'Информатика',q:'Екілік 101 санының ондық мәні қандай?',o:['3','4','5','6'],a:2},
+{s:'Химия',q:'Судың химиялық формуласы қайсы?',o:['H₂O','CO₂','O₂','NaCl'],a:0},
+{s:'Химия',q:'Ас тұзының формуласы қайсы?',o:['KCl','NaCl','HCl','NaOH'],a:1},
+{s:'Биология',q:'Фотосинтез кезінде өсімдік қандай газды сіңіреді?',o:['Оттегі','Көмірқышқыл газы','Азот','Сутегі'],a:1},
+{s:'Биология',q:'Жасушаның «энергия стансасы» қайсы?',o:['Ядро','Рибосома','Митохондрия','Вакуоль'],a:2},
+{s:'Қазақ тілі',q:'Қазақ алфавитінде неше әріп бар?',o:['33','42','28','36'],a:1},
+{s:'Қазақ тілі',q:'Зат есім қандай сұраққа жауап береді?',o:['Не? Кім?','Қандай?','Қанша?','Не істеді?'],a:0},
+{s:'Ағылшын тілі',q:'She ___ to school every day.',o:['go','goes','going','gone'],a:1},
+{s:'Ағылшын тілі',q:'«Write» етістігінің өткен шағы қайсы?',o:['wrote','writed','written','writes'],a:0},
+{s:'Тарих',q:'Қазақ хандығы қай жылы құрылды?',o:['1465','1731','1991','1218'],a:0},
+{s:'Тарих',q:'Қазақстан тәуелсіздігін қай жылы алды?',o:['1986','1991','1995','2000'],a:1},
+{s:'География',q:'Қазақстанның астанасы қай қала?',o:['Алматы','Астана','Шымкент','Қарағанды'],a:1},
+{s:'География',q:'Жердегі ең үлкен мұхит қайсы?',o:['Атлант','Үнді','Тынық','Солтүстік Мұзды'],a:2}];
+let dIdx=0,dRes=[],dPicked=false;
+function renderDiag(){
+  const d=DIAG[dIdx];dPicked=false;
+  $('diag-subject-title').textContent=d.s;
+  $('diag-q-number').textContent='Сұрақ '+(dIdx+1)+' / '+DIAG.length;
+  $('diag-question-text').textContent=d.q;
+  $('diag-options-container').innerHTML=d.o.map((o,i)=>`<button onclick="pickDiag(${i})" class="diag-opt w-full text-left border border-slate-200 rounded-xl px-4 py-3 text-xs font-medium hover:border-indigo-400 hover:bg-indigo-50 transition">${esc(o)}</button>`).join('');
+  const b=$('diag-next-btn');b.disabled=true;b.textContent=dIdx===DIAG.length-1?'Нәтижені көру':'Келесі сұрақ';
+}
+function pickDiag(i){
+  if(dPicked)return;dPicked=true;const d=DIAG[dIdx];dRes[dIdx]=(i===d.a);
+  document.querySelectorAll('.diag-opt').forEach((b,k)=>{b.disabled=true;if(k===d.a)b.className=b.className.replace('border-slate-200','border-emerald-400 bg-emerald-50');else if(k===i)b.className=b.className.replace('border-slate-200','border-rose-400 bg-rose-50');});
+  $('diag-next-btn').disabled=false;
+}
+function nextDiagStep(){if(!dPicked)return;if(dIdx<DIAG.length-1){dIdx++;renderDiag();}else finishDiag();}
+function finishDiag(){
+  const res={};DIAG.forEach((d,i)=>{res[d.s]=res[d.s]||{c:0,t:0};res[d.s].t++;if(dRes[i])res[d.s].c++;});
+  const first=!(window.currentUser&&window.currentUser.diag);
+  persist(u=>{u.diag=res;if(first)u.xp=(u.xp||0)+50;});
+  $('diag-quiz-box').classList.add('hidden');$('diag-result-box').classList.remove('hidden');
+  $('diag-subject-breakdown').innerHTML=Object.entries(res).map(([s,r])=>{const p=Math.round(r.c/r.t*100);return `<div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl"><p class="text-[10px] font-bold text-slate-500">${s}</p><p class="text-lg font-black ${lvl(p).txt}">${p}%</p><p class="text-[10px] text-slate-500">${r.c} / ${r.t} дұрыс</p></div>`;}).join('');
+  if(first)toast('+50 XP: диагностика аяқталды!');
+}
+const lvl=p=>p>=80?{n:'Меңгерілді',txt:'text-emerald-600',box:'bg-emerald-50 border-emerald-200'}:p>=50?{n:'Орташа деңгей',txt:'text-amber-600',box:'bg-amber-50 border-amber-200'}:{n:'Қосымша жұмыс керек',txt:'text-rose-600',box:'bg-rose-50 border-rose-200'};
+const pct=r=>Math.round(r.c/r.t*100);
+function renderRoadmap(){
+  const box=document.querySelector('#student-tab-roadmap .space-y-3');const u=window.currentUser;if(!box||!u)return;
+  if(!u.diag){box.innerHTML='<div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-600 flex justify-between items-center gap-3"><span>Жеке бағыт алу үшін алдымен диагностика тапсырыңыз.</span><button onclick="switchTab(\'student\',\'diagnostic\')" class="bg-indigo-600 text-white px-3 py-1.5 rounded-xl font-bold flex-shrink-0">Бастау</button></div>';return;}
+  box.innerHTML=Object.entries(u.diag).sort((a,b)=>pct(a[1])-pct(b[1])).map(([s,r],i)=>{const p=pct(r),l=lvl(p);return `<div class="p-4 ${l.box} border rounded-2xl flex justify-between items-center gap-3"><div><p class="text-xs font-bold text-slate-800">${i+1}. ${s}</p><p class="text-[10px] text-slate-500">${l.n}</p></div>${p<80?`<button onclick="switchTab('student','ai-tutor')" class="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-xl font-bold">Түсіндірме алу</button>`:`<span class="text-xs font-bold ${l.txt}">${p}%</span>`}</div>`;}).join('');
+}
+// ---- ТАПСЫРМАЛАР ----
+const TASKS=[
+{l:'Математика',c:'indigo',q:'x² − 9 = 0 теңдеуінің оң түбірін жазыңыз',a:['3']},
+{l:'Физика',c:'indigo',q:'Массасы 5 кг денеге 20 Н күш әсер етсе, үдеуі (м/с²) неге тең?',a:['4']},
+{l:'Информатика',c:'indigo',q:'Екілік 1100 санының ондық мәнін жазыңыз',a:['12']},
+{l:'Химия',c:'indigo',q:'Су молекуласында неше сутек атомы бар?',a:['2']},
+{l:'Биология',c:'indigo',q:'Адамның жасушасында неше хромосома бар?',a:['46']},
+{l:'Қазақ тілі',c:'indigo',q:'«Мектеп» сөзінде неше буын бар?',a:['2']},
+{l:'Ағылшын тілі',c:'indigo',q:'«Кітап» сөзін ағылшынша жазыңыз',a:['book']},
+{l:'Тарих',c:'indigo',q:'Ұлы Отан соғысы қай жылы басталды?',a:['1941']},
+{l:'География',c:'indigo',q:'Қазақстанның солтүстік көршісі қай ел?',a:['ресей','россия']}];
+
+function checkTask(i){
+  const v=$('task-in-'+i).value.trim().replace(',','.').toLowerCase(),m=$('task-msg-'+i);
+  if(TASKS[i].a.includes(v)){persist(u=>{u.done=[...(u.done||[]),i];u.xp=(u.xp||0)+20;});toast('Дұрыс! +20 XP');renderTasks();}
+  else{m.textContent='Қате, қайта байқап көріңіз';m.className='text-[11px] font-semibold text-rose-600';}
+}
+// ---- ЖЕТІСТІКТЕР ----
+function markChat(){if(window.currentUser&&!window.currentUser.chat)persist(u=>{u.chat=true;u.xp=(u.xp||0)+10;});}
+function renderAch(){
+  const u=window.currentUser||{};
+  const A=[['🚀','Алғашқы қадам','Диагностика аяқталды',!!u.diag],['🧠','ЖИ Досы','Тәлімгермен сөйлестіңіз',!!u.chat],['✅','Тапсырма шебері','Барлық пәндер тесті аяқталды',!!u.test],['🔥','Тұрақтылық','3 күндік оқу сериясы',(u.streak||0)>=3]];
+  $('ach-grid').innerHTML=A.map(a=>`<div class="p-4 border rounded-2xl text-center space-y-1 ${a[3]?'bg-amber-50 border-amber-200':'bg-slate-50 border-slate-200 opacity-50'}"><span class="text-2xl">${a[0]}</span><h4 class="font-bold text-xs text-slate-800">${a[1]}</h4><p class="text-[10px] text-slate-500">${a[2]}${a[3]?'':' (жабық)'}</p></div>`).join('');
+}
+// ---- МҰҒАЛІМ ----
+const students=()=>getUsersDB().filter(u=>u.role==='student');
+const avg=u=>{if(!u.diag)return null;let c=0,t=0;Object.values(u.diag).forEach(r=>{c+=r.c;t+=r.t;});return Math.round(c/t*100);};
+const weak=u=>{if(!u.diag)return null;const e=Object.entries(u.diag).sort((a,b)=>pct(a[1])-pct(b[1]))[0];return pct(e[1])<80?e[0]:null;};
+function renderClasses(){
+  $('classes-body').innerHTML=students().map(u=>{const a=avg(u),w=weak(u);return `<tr><td class="py-2.5 font-bold text-slate-800">${esc(u.name)}</td><td class="py-2.5 text-slate-600">${esc(u.grade||'')}</td><td class="py-2.5 font-bold text-indigo-600">${a===null?'—':a+'%'}</td><td class="py-2.5 ${w?'text-rose-600':'text-slate-400'}">${a===null?'Диагностика өтпеген':w||'Жоқ'}</td></tr>`;}).join('')||'<tr><td colspan="4" class="py-3 text-slate-400">Оқушылар жоқ</td></tr>';
+}
+function renderMon(){
+  const s=students(),done=s.filter(u=>u.diag),a=done.length?Math.round(done.reduce((x,u)=>x+avg(u),0)/done.length):null;
+  $('monitoring-box').innerHTML=`<p>Оқушы саны: <b>${s.length}</b></p><p>Диагностика тапсырғандар: <b>${done.length}</b></p><p>Сыныптың орташа нәтижесі: <b>${a===null?'деректер жоқ':a+'%'}</b></p>`;
+}
+function saveCurriculum(){try{localStorage.setItem('aisana_curriculum',$('curriculum-input').value);}catch(e){}toast('Оқу мақсаты сақталды');}
+function loadCurriculum(){try{const v=localStorage.getItem('aisana_curriculum');if(v)$('curriculum-input').value=v;}catch(e){}}
+function generateAITasks(){
+  const topic=$('generator-topic-input').value.trim(),btn=$('btn-generate-tasks'),box=$('generated-tasks-container');
+  if(!topic){toast('Алдымен тақырыпты енгізіңіз');return;}
+  btn.disabled=true;box.classList.remove('hidden');box.innerHTML='<p class="text-xs text-slate-500 italic">Тапсырмалар дайындалуда...</p>';
+  setTimeout(()=>{
+    const T=esc(topic);
+    box.innerHTML=[['Жеңіл','emerald',`«${T}» тақырыбының негізгі анықтамасын өз сөзіңізбен жазыңыз.`],['Орташа','amber',`«${T}» бойынша 2 есеп құрастырып, шешу жолын көрсетіңіз.`],['Күрделі','rose',`«${T}» тақырыбын күнделікті өмірдегі мысалмен байланыстырып, зерттеу тапсырмасын орындаңыз.`]].map(t=>`<div class="p-3 border border-${t[1]}-200 bg-${t[1]}-50/50 rounded-2xl text-xs"><b class="text-${t[1]}-700">${t[0]} деңгей:</b> ${t[2]}</div>`).join('')+'<p class="text-[10px] text-slate-400">Демо-режим: шаблон негізінде жасалды. Нақты ЖИ үшін сервер қажет.</p>';
+    btn.disabled=false;
+  },700);
+}
+// ---- ӘКІМШІ ----
+function renderUsers(){
+  const db=getUsersDB(),me=window.currentUser&&window.currentUser.email;
+  $('users-count').textContent='Барлық қолданушылар: '+db.length;
+  const R={student:'Оқушы',teacher:'Мұғалім',admin:'Әкімші'};
+  $('users-table').innerHTML='<table class="w-full text-left text-xs"><thead><tr class="border-b border-slate-200 text-slate-400 font-bold"><th class="py-2">Аты-жөні</th><th class="py-2">Email</th><th class="py-2">Рөлі</th><th></th></tr></thead><tbody class="divide-y divide-slate-100">'+db.map(u=>`<tr><td class="py-2.5 font-bold text-slate-800">${esc(u.name)}</td><td class="py-2.5 text-slate-600">${esc(u.email)}</td><td class="py-2.5">${R[u.role]||u.role}</td><td class="py-2.5 text-right">${u.email===me?'<span class="text-slate-300">сіз</span>':`<button data-email="${esc(u.email)}" onclick="deleteUser(this.dataset.email)" class="text-rose-600 font-bold hover:underline">Жою</button>`}</td></tr>`).join('')+'</tbody></table>';
+}
+function deleteUser(email){if(!confirm(email+' қолданушысын жою керек пе?'))return;saveUsersDB(getUsersDB().filter(u=>u.email!==email));renderUsers();toast('Қолданушы жойылды');}
+
+// ===== БАРЛЫҚ ПӘН: кітапхана, чат, басты бет =====
+const LIB=[['Математика','D = b² − 4ac. D > 0 болса, 2 түбір; D = 0 болса, 1 түбір; D < 0 болса, түбір жоқ.'],
+['Физика','F = m·a, v = s/t, p = m·v. Күш Ньютонмен (Н), үдеу м/с² өлшенеді.'],
+['Информатика','1 байт = 8 бит. Екілік жүйе тек 0 және 1 цифрларын қолданады.'],
+['Химия','Судың формуласы H₂O, ас тұзы NaCl. Периодтық жүйе элементтерді реттік нөмірімен орналастырады.'],
+['Биология','Фотосинтезде өсімдік CO₂ мен суды жарық энергиясымен глюкоза мен оттегіге айналдырады.'],
+['Қазақ тілі','Зат есім «не? кім?», сын есім «қандай?», етістік «не істеді?» сұрағына жауап береді.'],
+['Ағылшын тілі','Present Simple: He/She/It + етістік+s. Past Simple: тұрақты етістікке -ed қосылады.'],
+['Тарих','Қазақ хандығы 1465 жылы құрылды. Қазақстан тәуелсіздігін 1991 жылы алды.'],
+['География','Қазақстанның астанасы — Астана. Жердегі ең үлкен мұхит — Тынық мұхиты.']];
+function renderLib(){$('lib-grid').innerHTML=LIB.map(l=>`<div class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-1"><h4 class="font-bold text-xs text-indigo-900">${l[0]}: қысқаша конспект</h4><p class="text-xs text-slate-600">${l[1]}</p></div>`).join('');}
+const KB=[[['теңдеу','квадрат','дискриминант','математика'],'Квадраттық теңдеу ax² + bx + c = 0. D = b² − 4ac: D > 0 болса екі түбір, D = 0 болса бір түбір, D < 0 болса түбір жоқ.'],
+[['ньютон','физика','күш','үдеу'],'Ньютонның 2-заңы: F = m·a. Массасы 5 кг денеге 20 Н күш әсер етсе, a = 20/5 = 4 м/с².'],
+[['информатика','екілік','байт','бит'],'1 байт = 8 бит. Екілік 101 = 1·4 + 0·2 + 1 = 5.'],
+[['хим','формула','элемент','тұз'],'Химия: судың формуласы H₂O, ас тұзы NaCl. Заттар атомдардан тұрады, атомдар молекула құрайды.'],
+[['биолог','жасуша','фотосинтез','митохондрия'],'Биология: фотосинтезде өсімдік CO₂ мен суды жарықта глюкоза мен оттегіне айналдырады. Митохондрия жасушаға энергия береді.'],
+[['қазақ','грамматика','сөз','буын','зат есім'],'Қазақ тілі: зат есім «не? кім?», сын есім «қандай?», етістік «не істеді?» сұрағына жауап береді. Буын санын дауысты дыбыстардан санайсыз.'],
+[['ағылшын','english','tense','шақ'],'Ағылшын тілі: Present Simple-де he/she/it етістікке -s жалғанады (she goes). Өткен шақ: wrote, went — тұрақсыз етістіктер.'],
+[['тарих','хандық','тәуелсіздік','соғыс'],'Тарих: Қазақ хандығы 1465 жылы құрылған, Қазақстан тәуелсіздігін 1991 жылы алды.'],
+[['география','мұхит','қала','астана','өзен'],'География: Қазақстанның астанасы — Астана; Жердегі ең үлкен мұхит — Тынық мұхиты.']];
+function subjectAnswer(s){s=s.toLowerCase();const k=KB.find(e=>e[0].some(w=>s.includes(w)));return k?k[1]:null;}
+function renderDash(){
+  const box=document.querySelector('#student-tab-dashboard .space-y-3'),u=window.currentUser;if(!box||!u)return;
+  if(!u.diag){box.innerHTML='<div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600">Барлық пәндер бойынша деңгейіңізді білу үшін диагностика тапсырыңыз. Ұсыныстар осында шығады.</div>';return;}
+  box.innerHTML=Object.entries(u.diag).sort((a,b)=>pct(a[1])-pct(b[1])).slice(0,4).map(([s,r])=>{const p=pct(r),l=lvl(p);return `<div class="p-4 ${l.box} border rounded-2xl flex justify-between items-center gap-3"><div><h4 class="font-bold text-slate-800 text-xs">${s}</h4><span class="text-[10px] ${l.txt} font-bold">${l.n} • ${p}%</span></div>${p<80?`<button onclick="switchTab('student','ai-tutor')" class="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-xl font-bold">AI Көмегі</button>`:''}</div>`;}).join('');
+}
+const _sw2=switchTab;
+switchTab=function(r,i){_sw2(r,i);if(i==='library')renderLib();if(i==='dashboard'&&r==='student')renderDash();};
+
+// ===== 50 СҰРАҚТЫҚ ТЕСТ =====
+const TEST=`Математика|3x − 7 = 11 болса, x неге тең?|4;5;6;7|2
+Математика|200 санының 15%-ы неге тең?|20;25;30;35|2
+Математика|√144 неге тең?|11;12;14;24|1
+Математика|Үшбұрыштың ішкі бұрыштарының қосындысы қанша?|90°;180°;270°;360°|1
+Математика|x² − 7x + 10 = 0 түбірлерінің қосындысы неге тең?|5;7;10;−7|1
+Математика|Ұзындығы 6, ені 4 тіктөртбұрыштың ауданы неге тең?|10;20;24;48|2
+Физика|Жылдамдықтың СИ жүйесіндегі өлшем бірлігі қандай?|м/с;км/сағ;м/с²;Н|0
+Физика|Еркін түсу үдеуі шамамен неге тең?|1 м/с²;9,8 м/с²;98 м/с²;0,98 м/с²|1
+Физика|Ом заңының формуласы қайсы?|I = U·R;I = U/R;I = R/U;U = I/R|1
+Физика|Жұмыс қандай бірлікпен өлшенеді?|Ватт;Ньютон;Джоуль;Паскаль|2
+Физика|36 км/сағ жылдамдық неше м/с болады?|10;36;3,6;100|0
+Физика|Жарықтың вакуумдегі жылдамдығы шамамен қанша?|3 000 км/с;30 000 км/с;300 000 км/с;3 000 000 км/с|2
+Информатика|Компьютердің «миы» деп қай құрылғыны айтады?|Жад;Процессор;Монитор;Тінтуір|1
+Информатика|1 Кбайт неше байтқа тең?|100;1000;1024;8|2
+Информатика|Қайсысы ақпаратты енгізу құрылғысы?|Принтер;Монитор;Пернетақта;Динамик|2
+Информатика|Алгоритм дегеніміз не?|Бағдарлама тілі;Әрекеттердің нақты тізбегі;Компьютер түрі;Файл түрі|1
+Информатика|Excel кестесінің кеңейтімі қайсы?|.docx;.xlsx;.pptx;.txt|1
+Информатика|Екілік 1111 санының ондық мәні қандай?|14;15;16;13|1
+Химия|Сутегінің химиялық символы қайсы?|He;H;O;Hg|1
+Химия|Адам тыныс алу үшін қандай газ қажет?|Азот;Көмірқышқыл газы;Оттегі;Гелий|2
+Химия|pH < 7 болса, орта қандай?|Қышқыл;Сілтілік;Бейтарап;Тұзды|0
+Химия|Көмірқышқыл газының формуласы қайсы?|CO;CO₂;C₂O;O₂|1
+Химия|Темірдің химиялық символы қайсы?|Fe;F;Ir;Te|0
+Химия|Атомның оң зарядты бөлшегі қайсы?|Электрон;Нейтрон;Протон;Фотон|2
+Биология|Қанды айдайтын орган қайсы?|Өкпе;Жүрек;Бауыр;Бүйрек|1
+Биология|ДНҚ жасушаның қай бөлігінде орналасады?|Ядрода;Қабықшада;Вакуольде;Цитоплазмада ғана|0
+Биология|Өсімдіктің жасыл түсін беретін зат қайсы?|Гемоглобин;Хлорофилл;Инсулин;Крахмал|1
+Биология|Адамның қалыпты жасушасында неше хромосома бар?|23;44;46;48|2
+Биология|Адам денесіндегі ең жуан қан тамыры қайсы?|Аорта;Капилляр;Вена;Артериола|0
+Биология|Бақа қай класқа жатады?|Бауырымен жорғалаушылар;Құстар;Қосмекенділер;Сүтқоректілер|2
+Қазақ тілі|Сөйлемнің басты мүшелері қайсы?|Анықтауыш пен толықтауыш;Бастауыш пен баяндауыш;Пысықтауыш пен анықтауыш;Толықтауыш пен пысықтауыш|1
+Қазақ тілі|«Ақ» сөзінің антонимі қайсы?|Сары;Қара;Көк;Ашық|1
+Қазақ тілі|«Оқушылар» сөзінде неше буын бар?|2;3;4;5|2
+Қазақ тілі|Қайсысы дауысты дыбыс?|б;ә;к;т|1
+Қазақ тілі|«Қара сөздер» кітабының авторы кім?|Абай Құнанбайұлы;Мұхтар Әуезов;Жамбыл Жабаев;Ілияс Жансүгіров|0
+Ағылшын тілі|What is the capital of the UK?|Paris;London;Rome;Berlin|1
+Ағылшын тілі|I ___ a student.|is;are;am;be|2
+Ағылшын тілі|«Child» сөзінің көпше түрі қайсы?|childs;children;childes;childrens|1
+Ағылшын тілі|«Hot» сөзінің антонимі қайсы?|warm;cold;big;slow|1
+Ағылшын тілі|They ___ playing football now.|is;am;are;do|2
+Тарих|Қазақстанның бірінші Президенті кім?|Қасым-Жомарт Тоқаев;Нұрсұлтан Назарбаев;Дінмұхамед Қонаев;Бауыржан Момышұлы|1
+Тарих|Қазақстанның қазіргі Конституциясы қай жылы қабылданды?|1991;1993;1995;2000|2
+Тарих|Қазақ хандығының негізін кім қалады?|Абылай мен Қасым;Керей мен Жәнібек;Тәуке мен Есім;Шыңғыс пен Бату|1
+Тарих|Екінші дүниежүзілік соғыс қай жылы аяқталды?|1941;1943;1945;1950|2
+Тарих|Ұлы Жібек жолы қай құрлықтарды байланыстырды?|Африка мен Америка;Азия мен Еуропа;Австралия мен Азия;Антарктида мен Еуропа|1
+География|Жердегі ең үлкен құрлық қайсы?|Африка;Еуразия;Австралия;Оңтүстік Америка|1
+География|Қайсысы Қазақстандағы ірі өзен?|Ертіс;Нева;Ніл;Рейн|0
+География|Жер шарын солтүстік және оңтүстік жарты шарға бөлетін қиял сызық?|Нөлдік меридиан;Экватор;Тропик;Полярлық шеңбер|1
+География|Жердегі ең биік тау шыңы қайсы?|Эльбрус;Эверест;Мон-Блан;Хантәңірі|1
+География|Қазақстанның ең ірі қаласы қайсы?|Астана;Алматы;Шымкент;Ақтөбе|1`.trim().split('\n').map(l=>{const p=l.split('|');return{s:p[0],q:p[1],o:p[2].split(';'),a:+p[3]};});
+let tQ=[],tA=[],tI=0;
+
+function showTQ(){
+  const q=tQ[tI],n=tQ.length,ans=tA.filter(x=>x>=0).length;
+  $('tasks-grid').innerHTML=`<div class="space-y-4"><div class="flex justify-between text-[11px] font-semibold text-slate-500"><span>${q.s}</span><span>Сұрақ ${tI+1} / ${n} • жауап берілді: ${ans}</span></div><div class="h-1.5 bg-slate-100 rounded-full"><div class="h-1.5 bg-indigo-600 rounded-full" style="width:${(tI+1)/n*100}%"></div></div><p class="text-sm font-semibold text-slate-800">${esc(q.q)}</p><div class="space-y-2">${q.o.map((o,i)=>`<button onclick="pickT(${i})" class="w-full text-left border rounded-xl px-4 py-2.5 text-xs font-medium transition ${tA[tI]===i?'border-indigo-500 bg-indigo-50 text-indigo-700':'border-slate-200 hover:border-indigo-300'}">${esc(o)}</button>`).join('')}</div><div class="flex justify-between pt-3 border-t border-slate-100"><button onclick="moveT(-1)" ${tI?'':'disabled'} class="text-xs font-bold px-4 py-2 rounded-xl border border-slate-200 disabled:opacity-40">Артқа</button>${tI<n-1?'<button onclick="moveT(1)" class="bg-indigo-600 text-white text-xs font-bold px-5 py-2 rounded-xl">Келесі</button>':'<button onclick="finishTest()" class="bg-emerald-600 text-white text-xs font-bold px-5 py-2 rounded-xl">Тестті аяқтау</button>'}</div></div>`;
+}
+function pickT(i){tA[tI]=i;showTQ();}
+function moveT(d){tI+=d;showTQ();}
+
+// ===== ТЕСТ: ПӘН ТАҢДАУ =====
+let selSub='all';
+const SUBS=['Математика','Физика','Информатика','Химия','Биология','Қазақ тілі','Ағылшын тілі','Тарих','География'];
+const poolOf=k=>k==='all'?TEST:TEST.filter(q=>q.s===k);
+function pickSub(k){selSub=k;renderTasks();}
+function renderTasks(){
+  const u=window.currentUser||{},res=(u.tests||{})[selSub]||(selSub==='all'&&u.test?{score:u.test.score,total:TEST.length}:null),n=poolOf(selSub).length;
+  const chip=(k,l)=>`<button onclick="pickSub('${k}')" class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition ${selSub===k?'bg-indigo-600 text-white border-indigo-600':'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}">${l} (${poolOf(k).length})</button>`;
+  $('tasks-grid').innerHTML=`<div class="p-5 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3"><p class="text-xs font-bold text-slate-700">Пәнді таңдаңыз:</p><div class="flex flex-wrap gap-2">${chip('all','Барлық пәндер')}${SUBS.map(s=>chip(s,s)).join('')}</div><p class="text-xs text-slate-600">Таңдалған тест: <b>${selSub==='all'?'Барлық пәндер':selSub}</b>, ${n} сұрақ. Сұрақтар араласып келеді, әр дұрыс жауап +2 XP береді (бұл тестті алғаш тапсырғанда).</p>${res?`<p class="text-xs font-bold text-emerald-600">Соңғы нәтиже: ${res.score} / ${res.total}</p>`:''}<button onclick="startTest()" class="bg-indigo-600 text-white text-xs font-bold px-5 py-2 rounded-xl">${res?'Қайта тапсыру':'Тестті бастау'}</button></div>`;
+}
+function startTest(){tQ=[...poolOf(selSub)].sort(()=>Math.random()-.5);tA=new Array(tQ.length).fill(-1);tI=0;showTQ();}
+function finishTest(){
+  const un=tA.filter(x=>x<0).length;
+  if(un&&!confirm('Жауап берілмеген '+un+' сұрақ бар. Аяқтайсыз ба?'))return;
+  const by={};let sc=0;
+  tQ.forEach((q,i)=>{by[q.s]=by[q.s]||{c:0,t:0};by[q.s].t++;if(tA[i]===q.a){by[q.s].c++;sc++;}});
+  const u0=window.currentUser||{},first=selSub==='all'?!u0.test:!(u0.tests&&u0.tests[selSub]),total=tQ.length;
+  persist(u=>{u.tests=u.tests||{};u.tests[selSub]={score:sc,total};if(selSub==='all')u.test={score:sc,by};if(first)u.xp=(u.xp||0)+sc*2;});
+  const p=Math.round(sc/total*100);
+  $('tasks-grid').innerHTML=`<div class="text-center space-y-4"><div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-black">${p}%</div><h3 class="text-lg font-bold text-slate-800">${selSub==='all'?'Барлық пәндер':selSub}: ${sc} / ${total}</h3>${selSub==='all'?`<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">${Object.entries(by).map(([s,r])=>`<div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl"><p class="text-[10px] font-bold text-slate-500">${s}</p><p class="text-base font-black ${lvl(pct(r)).txt}">${pct(r)}%</p><p class="text-[10px] text-slate-500">${r.c} / ${r.t}</p></div>`).join('')}</div>`:''}<div class="flex justify-center gap-2"><button onclick="startTest()" class="bg-indigo-600 text-white text-xs font-bold px-5 py-2 rounded-xl">Қайта тапсыру</button><button onclick="renderTasks()" class="border border-slate-200 text-slate-700 text-xs font-bold px-5 py-2 rounded-xl">Басқа пән таңдау</button></div></div>`;
+  toast(first?'Тест аяқталды! +'+sc*2+' XP':'Тест аяқталды!');
+}
+
+// ===== ӘР ПӘННЕН 20 ТЕСТ: қосымша сұрақтар =====
+function pushQ(s,q,op){const c=op[0],o=[...op].sort(()=>Math.random()-.5);TEST.push({s,q,o,a:o.indexOf(c)});}
+function gen(s,q,ans,unit,ds){
+  unit=unit||'';ds=(ds||[ans+1,ans-1,ans+2,ans*2,ans+10,ans-2]).filter((v,i,a)=>v!==ans&&v>0&&a.indexOf(v)===i).slice(0,3);
+  pushQ(s,q,[ans,...ds].map(v=>v+unit));
+}
+(function(){
+  const M='Математика',P='Физика',I='Информатика';
+  [[2,5,3],[4,3,-2],[5,6,10],[3,8,-4]].forEach(([a,x,b])=>gen(M,`${a}x ${b<0?'−':'+'} ${Math.abs(b)} = ${a*x+b} болса, x неге тең?`,x));
+  [[10,250],[20,80],[25,160]].forEach(([p,n])=>gen(M,`${n} санының ${p}%-ы неге тең?`,p*n/100));
+  [169].forEach(n=>gen(M,`√${n} неге тең?`,Math.sqrt(n)));
+  [5,7].forEach(n=>gen(M,`2^${n} неге тең?`,2**n,'',[2*n,2**(n-1),2**(n+1)]));
+  [7,12].forEach(n=>gen(M,`Қабырғасы ${n} болатын шаршының периметрі неге тең?`,4*n,'',[n*n,2*n,n+4]));
+  [[9,20],[8,15]].forEach(([s,p])=>gen(M,`x² − ${s}x + ${p} = 0 теңдеуінің түбірлерінің көбейтіндісі неге тең?`,p,'',[s,p+2,s+p]));
+  [[100,20],[150,30],[240,60]].forEach(([s,t_])=>gen(P,`Дене ${s} м жолды ${t_} с-та жүріп өтті. Орташа жылдамдығы қандай (м/с)?`,s/t_,' м/с',[s/t_+1,s/t_*2,s*t_]));
+  [[3,4],[10,2],[6,5]].forEach(([m,a])=>gen(P,`Массасы ${m} кг денеге ${a} м/с² үдеу берілсе, күш неше Н болады?`,m*a,' Н',[m+a,m*a+5,m*a*2]));
+  [[30,5],[48,8]].forEach(([F,m])=>gen(P,`Массасы ${m} кг денеге ${F} Н күш әсер етсе, үдеуі қандай (м/с²)?`,F/m,' м/с²',[F*m,F/m+2,F/m*2]));
+  [[200,4],[90,3]].forEach(([m,V])=>gen(P,`Массасы ${m} г, көлемі ${V} см³ заттың тығыздығы қандай (г/см³)?`,m/V,' г/см³',[m*V,m/V+5,V]));
+  [[20,5],[15,4]].forEach(([F,s])=>gen(P,`${F} Н күш әсерінен дене ${s} м жол жүрді. Жұмыс неше Дж?`,F*s,' Дж',[F+s,F*s*2,F/s]));
+  [[600,10],[450,15]].forEach(([A,t_])=>gen(P,`${t_} с ішінде ${A} Дж жұмыс істелді. Қуаты қандай (Вт)?`,A/t_,' Вт',[A*t_,A/t_+10,A/t_*2]));
+  [['1001'],['1010'],['11001'],['1110']].forEach(([b])=>gen(I,`Екілік ${b} санының ондық мәні қандай?`,parseInt(b,2)));
+  [6,9,12].forEach(n=>pushQ(I,`Ондық ${n} санының екілік түрі қандай?`,[n,n+1,n-1,n+2].map(v=>v.toString(2))));
+  [2,4,5].forEach(n=>gen(I,`${n} байт неше бит?`,n*8,' бит',[n*4,n*10,n*16]));
+  [2,3,4].forEach(n=>gen(I,`${n} Кбайт неше байт?`,n*1024,' байт',[n*1000,n*512,n*100]));
+})();
+function addQ(s,txt){txt.trim().split('\n').forEach(l=>{const[q,o]=l.split('|');pushQ(s,q,o.split(';'));});}
+addQ('Информатика','1 Мбайт неше Кбайтқа тең?|1024;512;1000;2048');
+addQ('Химия',`Атомдық нөмірі 1 болатын элемент қайсы?|Сутегі;Гелий;Литий;Оттегі
+Натрийдің химиялық символы қайсы?|Na;N;K;Ni
+Периодтық жүйені кім жасады?|Д.И. Менделеев;М. Ломоносов;И. Ньютон;Дж. Дальтон
+Су 0°C-дан төмен температурада қандай күйде болады?|Қатты;Сұйық;Газ;Плазма
+Лакмус қышқыл ортада қандай түске боялады?|Қызыл;Көк;Жасыл;Сары
+Алтынның химиялық символы қайсы?|Au;Ag;Al;Ar
+Метанның формуласы қайсы?|CH₄;C₂H₆;CO₂;C₂H₂
+Ауаның негізгі құрамдас бөлігі қайсы?|Азот;Оттегі;Көмірқышқыл газы;Аргон
+Күкірт қышқылының формуласы қайсы?|H₂SO₄;HCl;HNO₃;H₃PO₄
+Қайсысы қарапайым зат?|Оттегі;Су;Көмірқышқыл газы;Ас тұзы
+Бейтарап атомда электрон саны неге тең?|Протон санына;Нейтрон санына;Протоннан екі есе көп;Нөлге
+Хлордың химиялық символы қайсы?|Cl;C;Ch;Cr
+Массаның сақталу заңын қалыптастырған ғалым кім?|М. Ломоносов;А. Эйнштейн;Б. Паскаль;М. Кюри
+Тұз қышқылының формуласы қайсы?|HCl;H₂SO₄;HNO₃;H₂CO₃`);
+addQ('Биология',`Фотосинтез жүретін жасуша органоиды қайсы?|Хлоропласт;Митохондрия;Ядро;Рибосома
+Оттегін тасымалдайтын қан жасушалары қайсы?|Эритроциттер;Лейкоциттер;Тромбоциттер;Қан плазмасы
+Адам денесіндегі ең үлкен ішкі ағза қайсы?|Бауыр;Жүрек;Өкпе;Бүйрек
+Қайсысы сүтқоректілерге жатады?|Кит;Акула;Бақа;Жылан
+Тірі организмнің құрылымдық бірлігі не?|Жасуша;Ұлпа;Молекула;Мүше жүйесі
+Балықтың тыныс алу органы қайсы?|Желбезек;Өкпе;Тері;Жүрек
+Ересек адамда сүйек саны шамамен қанша?|206;106;306;406
+Өсімдікте жеміс қай мүшеден түзіледі?|Гүлден;Тамырдан;Діңнен;Жапырақтан
+Қанның қызыл түсін қай зат береді?|Гемоглобин;Хлорофилл;Инсулин;Пепсин
+Өсімдік тамырының басты қызметі қандай?|Су мен минералды заттарды сіңіру;Жарықты сіңіру;Тұқым түзу;Дыбыс шығару
+Қайсысы омыртқасыздарға жатады?|Жәндіктер;Құстар;Балықтар;Бауырымен жорғалаушылар
+Инсулинді қай без бөліп шығарады?|Ұйқы безі;Қалқанша без;Сілекей безі;Тер безі
+Ч. Дарвиннің ең танымал еңбегі қайсы?|Түрлердің шығу тегі;Қара сөздер;Алгебра;Оптика
+Қанның құрамына кіретін жасуша қайсы?|Тромбоциттер;Нейрондар;Хлоропластар;Остеоциттер`);
+addQ('Қазақ тілі',`Қайсысы жіңішке дауысты дыбыс?|ә;а;о;ұ
+Қайсысы сын есім?|Әдемі;Жүгіреді;Кітап;Бір
+«Бала» сөзінің көпше түрі қайсы?|Балалар;Балар;Баладар;Балатар
+Қайсысы сан есім?|Бес;Жылдам;Қала;Оқиды
+«Таудың» сөзі қай септікте тұр?|Ілік;Барыс;Табыс;Жатыс
+Қазақ тілі қай тіл тобына жатады?|Түркі;Славян;Герман;Роман
+«Үлкен» сөзінің синонимі қайсы?|Зор;Кішкентай;Жіңішке;Тар
+Сұраулы сөйлем соңына қандай белгі қойылады?|?;!;.;,
+«Сен қайда барасың?» қандай сөйлем?|Сұраулы;Хабарлы;Бұйрық;Лепті
+Етістік қандай сұраққа жауап береді?|Не істеді?;Қандай?;Кім?;Қанша?
+Қазақ тілінде неше септік бар?|7;5;6;9
+Мақал дегеніміз не?|Қысқа нақыл сөз;Ұзақ повесть;Ән;Би
+«Қыз Жібек» қандай шығарма?|Лиро-эпостық жыр;Мақал;Жұмбақ;Тақпақ
+«Тіл – құрал» еңбегінің авторы кім?|Ахмет Байтұрсынұлы;Абай;Шоқан Уәлиханов;Ыбырай Алтынсарин
+Жамбыл Жабаев кім болған?|Ақын;Ғалым;Композитор;Суретші`);
+addQ('Ағылшын тілі',`She ___ to school yesterday.|went;goes;going;gone
+What is the plural of "man"?|men;mans;mens;manes
+What colour is the sky on a clear day?|blue;red;green;black
+He is ___ tall boy.|a;an;two;are
+How many days are there in a week?|seven;five;six;eight
+Which word is a verb?|run;table;happy;blue
+My brother ___ a doctor.|is;am;are;be
+How do you say «жаңбыр» in English?|rain;sun;snow;wind
+I have ___ apples.|some;a;an;is
+What is the opposite of "big"?|small;tall;long;fat
+Which day comes after Monday?|Tuesday;Sunday;Friday;Thursday
+We ___ to the park tomorrow.|will go;went;gone;goes
+How do you say «үй» in English?|house;horse;mouse;hose
+What is the comparative form of "good"?|better;gooder;best;more good
+Which month is the first of the year?|January;March;June;December`);
+addQ('Тарих',`Астана Қазақстанның астанасы болып қай жылы жарияланды?|1997;1991;2002;2010
+«Жеті жарғы» заңын кім шығарды?|Тәуке хан;Абылай хан;Қасым хан;Есім хан
+Қасым хан кезінде қандай заң қолданылды?|Қасқа жол;Жеті жарғы;Ескі жол;Конституция
+Теңге ұлттық валюта ретінде қай жылы енгізілді?|1993;1991;1995;2000
+Жеңіс күні қай күні тойланады?|9 мамыр;1 мамыр;7 мамыр;12 маусым
+Желтоқсан көтерілісі қай жылы болды?|1986;1991;1979;1989
+Қазақстан жеріндегі ежелгі тайпалар қайсы?|Сақтар;Римдіктер;Майялар;Викингтер
+Жібек жолындағы қазақстандық қала қайсы?|Отырар;Лондон;Мадрид;Берлин
+«Қобыланды батыр» қандай жанрға жатады?|Жыр;Роман;Мақал;Пьеса
+Бірінші дүниежүзілік соғыс қай жылы басталды?|1914;1905;1939;1920
+Ұлы Француз революциясы қай жылы басталды?|1789;1689;1815;1917
+Колумб Америкаға қай жылы жетті?|1492;1392;1592;1692
+«Ақтабан шұбырынды» оқиғасы қай жылы болды?|1723;1465;1991;1812
+Қазақстанның мемлекеттік рәміздері қайсы?|Ту, елтаңба, әнұран;Ту, ақша, карта;Елтаңба, күн, ай;Ән, би, күй
+Тәуелсіздік күні қашан тойланады?|16 желтоқсан;1 қаңтар;22 наурыз;30 тамыз`);
+addQ('География',`Аумағы бойынша Қазақстан әлемде нешінші орында?|9-орын;3-орын;12-орын;20-орын
+Қазақстандағы ең биік шың қайсы?|Хантәңірі;Эверест;Эльбрус;Мон-Блан
+Қайсысы Қазақстанның көршісі?|Қытай;Жапония;Түркия;Үндістан
+Каспий теңізі қандай су айдыны?|Көл-теңіз;Өзен;Мұхит;Мұздық
+Африканың ең ұзын өзені қайсы?|Ніл;Ертіс;Рейн;Нева
+Жердің табиғи серігі қайсы?|Ай;Марс;Шолпан;Күн
+Күн жүйесіндегі ең үлкен планета қайсы?|Юпитер;Сатурн;Жер;Марс
+Қазақстан қай құрлықта орналасқан?|Еуразия;Африка;Австралия;Антарктида
+Ең кіші құрлық қайсы?|Австралия;Африка;Азия;Еуропа
+Антарктида қандай құрлық?|Ең суық құрлық;Ең ыстық құрлық;Ормандар жиегі;Шөлді өлке
+Қазақстан климаты қандай?|Тым континентті;Муссондық;Экваторлық;Теңіздік
+Марианна ойпаты қай мұхитта?|Тынық;Атлант;Үнді;Солтүстік Мұзды
+Қазақстанда ең кең таралған табиғи зона қайсы?|Дала мен шөл;Тундра;Тропиктік орман;Мәңгі мұз
+Жер өз осінен бір айналымды қанша уақытта жасайды?|24 сағат;12 сағат;7 күн;365 күн
+Ең ұзын құрлық өзені Нілмен қатар қай құрлықта ағады?|Африка;Антарктида;Австралия;Оңтүстік Америка`);
+
+// ===== ДИАГНОСТИКА: 20 СҰРАҚ + ПӘН ТАҢДАУ =====
+let dQ=[],dSel='all';
+function diagSet(k){dSel=k;renderDiagSelect();}
+function renderDiagSelect(){
+  const u=window.currentUser||{},done=u.diagDone||{};
+  const chip=(k,l)=>`<button onclick="diagSet('${k}')" class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition ${dSel===k?'bg-indigo-600 text-white border-indigo-600':'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}">${l}${done[k]?' ✔':''}</button>`;
+  $('diag-select-box').innerHTML=`<div><span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">Бастапқы диагностика</span><h2 class="text-lg font-bold text-slate-800 mt-2">Диагностика түрін таңдаңыз</h2></div><div class="flex flex-wrap gap-2">${chip('all','Барлық пәндер')}${SUBS.map(s=>chip(s,s)).join('')}</div><p class="text-xs text-slate-600">Таңдалған: <b>${dSel==='all'?'Барлық пәндер':dSel}</b>, 20 сұрақ. ${dSel==='all'?'Әр пәннен 2 сұрақ, қалғаны кездейсоқ таңдалады.':'Барлық сұрақ осы пәннен болады.'} Алғаш аяқтағанда +50 XP.</p><button onclick="beginDiag()" class="bg-indigo-600 text-white text-xs font-bold px-6 py-2.5 rounded-xl">Диагностиканы бастау</button>`;
+}
+function startDiag(){$('diag-quiz-box').classList.add('hidden');$('diag-result-box').classList.add('hidden');$('diag-select-box').classList.remove('hidden');renderDiagSelect();}
+const shuf=a=>[...a].sort(()=>Math.random()-.5);
+function beginDiag(){
+  if(dSel==='all'){
+    const picked=SUBS.flatMap(s=>shuf(poolOf(s)).slice(0,2));
+    const extra=shuf(TEST.filter(q=>!picked.includes(q))).slice(0,20-picked.length);
+    dQ=shuf([...picked,...extra]);
+  }else dQ=shuf(poolOf(dSel)).slice(0,20);
+  dIdx=0;dRes=[];dPicked=false;
+  $('diag-select-box').classList.add('hidden');$('diag-result-box').classList.add('hidden');$('diag-quiz-box').classList.remove('hidden');
+  $('diag-quiz-box').querySelector('span').textContent='Бастапқы диагностика ('+(dSel==='all'?'Барлық пәндер':dSel)+')';
+  renderDiag();
+}
+
+// ===== AI-ТӘЛІМГЕР: кез келген сұраққа жауап =====
+let chatHist=[],chatBusy=false,lastAIErr='';
+const AI_KEY=()=>{try{return localStorage.getItem('aisana_ai_key')||'';}catch(e){return '';}};
+const AI_MODEL=()=>{try{return localStorage.getItem('aisana_ai_model')||'claude-sonnet-5-5';}catch(e){return 'claude-sonnet-5-5';}};
+const AIH=()=>{const h={'Content-Type':'application/json'};const k=AI_KEY();if(k){h['x-api-key']=k;h['anthropic-version']='2023-06-01';h['anthropic-dangerous-direct-browser-access']='true';}return h;};
+const AI_URL=()=>{if(AI_KEY())return '';let v='';try{v=localStorage.getItem('aisana_ai_endpoint')||'';}catch(e){}return v||(/^https?:$/.test(location.protocol)&&!/^(localhost|127\.)/.test(location.hostname)?'/.netlify/functions/chat':'');};
+function updateAIStatus(){const el=$('ai-status');if(el)el.textContent=AI_KEY()?'Онлайн • жеке кілт қосылған':(AI_URL()?'Онлайн • ЖИ сервері':'Демо-режим (кілт қосылмаған)');}
+function setAIEndpoint(){
+  const cur=AI_KEY();
+  const v=prompt('Anthropic API кілтіңізді енгізіңіз (sk-ant-...).\nКілт тек осы браузерде сақталады. Оны оқушыларға бермеңіз, тек өз құрылғыңызда қолданыңыз.\nБос қалдырып OK бассаңыз, кілт өшіріледі.',cur);
+  if(v===null)return;
+  try{if(v.trim())localStorage.setItem('aisana_ai_key',v.trim());else localStorage.removeItem('aisana_ai_key');}catch(e){}
+  updateAIStatus();toast(v.trim()?'Кілт сақталды. Енді сұрақ қойып көріңіз':'Кілт өшірілді');
+}
+const fmtAI=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+function aiSystem(){const u=window.currentUser||{};return 'Сен AI-Sana білім беру платформасының AI-тәлімгерісің. Оқушымен '+(u.grade?u.grade+' сынып деңгейінде, ':'')+'қазақ тілінде (оқушы басқа тілде жазса, сол тілде) жауап бер. Кез келген тақырыпқа жауап бер: оқу пәндері, күнделікті сұрақтар, кеңестер. Оқу сұрақтарын қадам-қадаммен, қарапайым түсіндір, мысал келтір. Жауапты қысқа әрі нақты ұста. Зиянды немесе қауіпті сұрауларға сыпайы түрде бас тарт.';}
+async function askAI(){
+  lastAIErr='';
+  const body={system:aiSystem(),messages:chatHist.slice(-12)};
+  try{
+    const ep=AI_URL();
+    if(ep){
+      const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      let d={};try{d=await r.json();}catch(e){}
+      if(!r.ok||!d.reply){lastAIErr='HTTP '+r.status+(d.error?' — '+d.error:'');throw new Error('bad');}return d.reply;
+    }
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:AIH(),body:JSON.stringify({model:AI_MODEL(),max_tokens:1000,...body})});
+    const d=await r.json();
+    const txt=(d.content||[]).map(c=>c.type==='text'?c.text:'').join('\n').trim();
+    if(!r.ok||!txt){lastAIErr='HTTP '+r.status+(d.error&&d.error.message?' — '+d.error.message:'');throw new Error('bad');}return txt;
+  }catch(e){if(!lastAIErr&&e&&e.message!=='bad')lastAIErr=String(e.message||e);return null;}
+}
+async function sendChatMessage(){
+  const input=$('chat-input'),box=$('chat-messages');
+  if(!input||!box||chatBusy)return;
+  const text=input.value.trim();if(!text)return;
+  const add=(cls,html)=>{const d=document.createElement('div');d.className=cls;d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return d;};
+  add('flex justify-end',`<div class="max-w-[80%] bg-indigo-600 text-white rounded-2xl rounded-br-none p-3 text-xs"><p class="font-bold text-[10px] opacity-80 mb-0.5">Сіз</p>${fmtAI(text)}</div>`);
+  input.value='';markChat();chatBusy=true;
+  chatHist.push({role:'user',content:text});
+  const wait=add('flex justify-start','<div class="bg-slate-100 rounded-2xl rounded-bl-none p-3 text-xs text-slate-500 italic">AI-Тәлімгер жауап дайындауда...</div>');
+  let ans=await askAI(),note='';
+  if(!ans){
+    ans=subjectAnswer(text)||'Бұл сұраққа демо-режимде жауап бере алмаймын. Кез келген сұраққа жауап алу үшін жоғарыдағы «⚙ ЖИ баптау» батырмасы арқылы ЖИ серверін қосыңыз.';
+    note='<p class="text-[10px] text-slate-400 italic mt-1.5">Демо-режим: дайын жауап көрсетілді.</p>'+(lastAIErr?'<p class="text-[11px] text-rose-600 font-semibold mt-1">ЖИ қатесі: '+esc(lastAIErr)+'</p>':'')+(/HTTP 40[45]/.test(lastAIErr)?'<p class="text-[11px] text-slate-600 mt-1">Netlify функциясы табылмады. «⚙ ЖИ баптау» арқылы өз API кілтіңізді енгізсеңіз, ЖИ осы беттен тікелей жұмыс істейді.</p>':'');
+  }
+  chatHist.push({role:'assistant',content:ans});
+  wait.remove();
+  add('flex justify-start',`<div class="max-w-[80%] bg-slate-100 rounded-2xl rounded-bl-none p-3 text-xs text-slate-800"><p class="font-bold text-[10px] text-indigo-600 mb-0.5">AI-Тәлімгер</p>${fmtAI(ans)}${note}</div>`);
+  chatBusy=false;
+}
+updateAIStatus();
+
+// ===== МАТЕРИАЛДАР КІТАПХАНАСЫ: әр пәнге 50 конспект =====
+const LIBT={"Математика": ["Натурал сандар", "Жай бөлшектер", "Ондық бөлшектер", "Пайыз", "Қатынас пен пропорция", "Жай және құрама сандар", "ЕҮОБ және ЕКОЕ", "Рационал сандар", "Иррационал сандар", "Дәреже", "Түбір", "Алгебралық өрнектер", "Көпмүшелер", "Қысқаша көбейту формулалары", "Көбейткіштерге жіктеу", "Алгебралық бөлшектер", "Сызықтық теңдеулер", "Теңдеулер жүйесі", "Теңсіздіктер", "Квадрат теңдеулер", "Виет теоремасы", "Функция ұғымы", "Сызықтық функция", "Квадраттық функция", "Кері пропорционалдық", "Арифметикалық прогрессия", "Геометриялық прогрессия", "Модуль", "Координаталар жазықтығы", "Бұрыштар", "Үшбұрыштар", "Үшбұрыш теңсіздігі", "Пифагор теоремасы", "Ұқсас үшбұрыштар", "Төртбұрыштар", "Параллелограмм", "Трапеция", "Шеңбер мен дөңгелек", "Көпбұрыштар", "Аудан формулалары", "Көлем формулалары", "Тригонометрия негіздері", "Синус пен косинус", "Векторлар", "Комбинаторика", "Ықтималдық", "Статистика", "Логарифм", "Туынды", "Интеграл негіздері"], "Физика": ["Физика ғылымы", "Өлшеу және қателік", "Механикалық қозғалыс", "Бірқалыпты қозғалыс", "Үдеу", "Еркін түсу", "Қисық сызықты қозғалыс", "Айналмалы қозғалыс", "Ньютонның 1-заңы", "Ньютонның 2-заңы", "Ньютонның 3-заңы", "Ауырлық күші", "Серпімділік күші", "Үйкеліс күші", "Бүкіләлемдік тартылыс", "Дене салмағы", "Импульс", "Импульстің сақталуы", "Механикалық жұмыс", "Қуат", "Кинетикалық энергия", "Потенциалдық энергия", "Энергияның сақталуы", "Қарапайым механизмдер", "ПӘК", "Қысым", "Паскаль заңы", "Архимед күші", "Атмосфералық қысым", "Тербелістер", "Толқындар", "Дыбыс", "Жылулық қозғалыс", "Ішкі энергия", "Жылу мөлшері", "Агрегаттық күйлер", "Балқу мен қатаю", "Булану мен конденсация", "Жылу двигательдері", "Электр заряды", "Электр өрісі", "Электр тоғы", "Ом заңы", "Өткізгіштерді жалғау", "Тоқтың жұмысы мен қуаты", "Магнит өрісі", "Электромагниттік индукция", "Жарық", "Линзалар", "Атом құрылысы"], "Информатика": ["Ақпарат ұғымы", "Ақпарат өлшем бірлігі", "Санау жүйелері", "Екілік жүйе", "Компьютер құрылысы", "Процессор", "Жад түрлері", "Енгізу құрылғылары", "Шығару құрылғылары", "Операциялық жүйе", "Файл және қалта", "Қолданбалы бағдарламалар", "Мәтіндік редактор", "Электрондық кесте", "Excel формулалары", "Диаграммалар", "Презентация", "Графикалық редактор", "Растрлық графика", "Векторлық графика", "Дыбыс пен бейне", "Желі және интернет", "IP-мекенжай", "Браузер және іздеу", "Электрондық пошта", "Киберқауіпсіздік", "Вирустар", "Құпия сөздер", "Авторлық құқық", "Алгоритм", "Блок-схема", "Алгоритм түрлері", "Айнымалылар", "Деректер типтері", "Шартты оператор", "Циклдер", "Массивтер", "Функциялар", "Python негіздері", "Жолдармен жұмыс", "Файлмен жұмыс", "Логика алгебрасы", "Логикалық амалдар", "Деректер базасы", "HTML негіздері", "CSS негіздері", "Роботтехника", "Жасанды интеллект", "Деректерді талдау", "Криптография негіздері"], "Химия": ["Химия пәні", "Зат және оның қасиеттері", "Таза заттар мен қоспалар", "Қоспаларды бөлу", "Атом", "Атом құрылысы", "Периодтық заң", "Периодтық жүйе", "Химиялық элемент", "Химиялық таңбалар", "Молекулалар", "Химиялық формулалар", "Валенттілік", "Салыстырмалы молекулалық масса", "Массаның сақталу заңы", "Химиялық реакция", "Реакция теңдеулері", "Реакция түрлері", "Мольдік масса", "Моль ұғымы", "Оттегі", "Сутегі", "Су", "Ауа", "Оксидтер", "Негіздер", "Қышқылдар", "Тұздар", "Индикаторлар", "Ерітінділер", "Ерігіштік", "Концентрация", "Электролиттік диссоциация", "Иондық реакциялар", "Металдар", "Металдардың коррозиясы", "Бейметалдар", "Галогендер", "Күкірт", "Азот", "Көміртек", "Органикалық химия", "Алкандар", "Алкендер", "Спирттер", "Карбон қышқылдары", "Майлар", "Көмірсулар", "Белоктар", "Полимерлер"], "Биология": ["Биология ғылымы", "Тірі организм белгілері", "Жасуша", "Жасуша органоидтары", "Прокариот пен эукариот", "Жасуша бөлінуі", "Ұлпалар", "Фотосинтез", "Тыныс алу", "Қоректену", "Зат алмасу", "Өсімдік тамыры", "Өсімдік сабағы", "Жапырақ", "Гүл мен жеміс", "Тұқым", "Өсімдіктердің көбеюі", "Балдырлар", "Мүктер мен папоротниктер", "Қылқан жапырақтылар", "Жабық тұқымдылар", "Саңырауқұлақтар", "Бактериялар", "Вирустар", "Қарапайымдар", "Буынаяқтылар", "Жәндіктер", "Балықтар", "Қосмекенділер", "Бауырымен жорғалаушылар", "Құстар", "Сүтқоректілер", "Қаңқа", "Бұлшықет", "Қан айналымы", "Қан құрамы", "Тыныс алу жүйесі", "Ас қорыту жүйесі", "Бөліп шығару жүйесі", "Жүйке жүйесі", "Сезім мүшелері", "Эндокриндік жүйе", "Иммунитет", "Гигиена мен денсаулық", "Тұқым қуалаушылық", "Мендель заңдары", "ДНҚ мен РНҚ", "Эволюция", "Экожүйе", "Қоршаған ортаны қорғау"], "Қазақ тілі": ["Дыбыс және әріп", "Дауысты дыбыстар", "Дауыссыз дыбыстар", "Буын", "Екпін", "Үндестік заңы", "Сөз", "Сөздің мағынасы", "Синонимдер", "Антонимдер", "Омонимдер", "Фразеологизмдер", "Сөз құрамы", "Түбір мен қосымша", "Сөзжасам", "Зат есім", "Сын есім", "Сан есім", "Есімдік", "Етістік", "Етістік шақтары", "Рай", "Үстеу", "Шылау", "Одағай", "Септік", "Көптік жалғау", "Тәуелдік жалғау", "Жіктік жалғау", "Сөз тіркесі", "Сөйлем", "Сөйлем түрлері", "Бастауыш", "Баяндауыш", "Анықтауыш", "Толықтауыш", "Пысықтауыш", "Жай сөйлем", "Құрмалас сөйлем", "Тыныс белгілері", "Тіке сөйлеу", "Диалог", "Мәтін", "Шағын мәтін жазу", "Мазмұндама", "Шығарма", "Өлең құрылысы", "Мақал-мәтел", "Халық ауыз әдебиеті", "Абай шығармашылығы"], "Ағылшын тілі": ["Alphabet and sounds", "Greetings", "Numbers", "Colours", "Family", "Daily routine", "Articles", "Nouns and plurals", "Pronouns", "Possessives", "Adjectives", "Comparatives", "Superlatives", "Adverbs", "Prepositions of place", "Prepositions of time", "To be", "To have", "Present Simple", "Present Continuous", "Past Simple", "Irregular verbs", "Future Simple", "Going to", "Present Perfect", "Modal verbs", "Imperatives", "Questions", "Negatives", "There is / There are", "Countable and uncountable", "Some and any", "Conditionals", "Passive voice", "Reported speech", "Question tags", "Phrasal verbs", "Word formation", "Linking words", "Telling the time", "Weather", "Food and drinks", "Hobbies", "Travel", "School life", "My town", "Health", "Jobs", "Technology", "Writing a letter"], "Тарих": ["Тарих ғылымы", "Алғашқы адамдар", "Тас ғасыры", "Қола дәуірі", "Андронов мәдениеті", "Сақтар", "Ғұндар", "Үйсіндер мен қаңлылар", "Түрік қағанаты", "Батыс Түрік қағанаты", "Түргеш қағанаты", "Қарлұқтар", "Оғыздар", "Қыпшақтар", "Қимақтар", "Қарахан мемлекеті", "Ұлы Жібек жолы", "Отырар", "Түркістан", "Моңғол шапқыншылығы", "Алтын Орда", "Ақ Орда", "Моғолстан", "Әбілқайыр хандығы", "Қазақ хандығының құрылуы", "Қасым хан", "Тәуке хан", "Жеті жарғы", "Үш жүз", "Жоңғар шапқыншылығы", "Ақтабан шұбырынды", "Абылай хан", "Кенесары көтерілісі", "Ресейге қосылу", "Реформалар", "Ұлт-азаттық қозғалыстар", "Алаш қозғалысы", "1916 жылғы көтеріліс", "Қазан революциясы", "Алашорда", "Кеңестік дәуір", "Ұжымдастыру", "Ашаршылық", "Саяси қуғын-сүргін", "Ұлы Отан соғысы", "Тың игеру", "Желтоқсан оқиғасы", "Тәуелсіздік", "Конституция", "Мемлекеттік рәміздер"], "География": ["География ғылымы", "Жер шары", "Жердің пішіні мен өлшемі", "Карта", "Масштаб", "Координаталар", "Бағдарлау", "Жердің қозғалысы", "Уақыт белдеулері", "Литосфера", "Жер қыртысы", "Тау жыныстары", "Минералдар", "Жанартаулар", "Жер сілкінісі", "Рельеф", "Таулар", "Жазықтар", "Гидросфера", "Дүниежүзілік мұхит", "Теңіздер", "Өзендер", "Көлдер", "Жер асты сулары", "Мұздықтар", "Атмосфера", "Ауа райы", "Климат", "Желдер", "Жауын-шашын", "Климаттық белдеулер", "Биосфера", "Табиғи зоналар", "Орманды зона", "Дала мен шөл", "Тундра", "Материктер", "Еуразия", "Африка", "Америка", "Австралия", "Антарктида", "Халық", "Қазақстан халқы", "Қазақстанның географиялық орны", "Қазақстан рельефі", "Қазақстан климаты", "Қазақстан суы", "Қазақстанның табиғи ресурстары", "Экология"]};
+let libSub='Математика',libQ='';
+const libKey=(s,i)=>'aisana_lib:'+s+':'+i;
+const libGet=(s,i)=>{try{return localStorage.getItem(libKey(s,i));}catch(e){return null;}};
+function libSet(s){libSub=s;libQ='';renderLib();}
+function renderLib(){
+  const g=$('lib-grid');if(!g)return;g.className='space-y-4';
+  g.innerHTML=`<div class="flex flex-wrap gap-2">${SUBS.map(s=>`<button onclick="libSet('${s}')" class="px-3 py-1.5 rounded-full text-[11px] font-bold border transition ${libSub===s?'bg-indigo-600 text-white border-indigo-600':'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}">${s} (${LIBT[s].length})</button>`).join('')}</div><input id="lib-search" value="" oninput="libQ=this.value;renderLibList()" placeholder="Тақырыпты іздеу..." class="w-full border border-slate-300 rounded-xl px-3 py-2"><div id="lib-view"></div><div id="lib-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>`;
+  renderLibList();
+}
+function renderLibList(){
+  const q=libQ.toLowerCase();
+  $('lib-list').innerHTML=LIBT[libSub].map((n,i)=>[n,i]).filter(([n])=>n.toLowerCase().includes(q)).map(([n,i])=>`<button onclick="openLib(${i})" class="text-left p-3 border border-slate-200 rounded-xl bg-white hover:border-indigo-400 hover:bg-indigo-50 transition text-xs font-semibold text-slate-800"><span class="text-indigo-600 font-black">${i+1}.</span> ${esc(n)}${libGet(libSub,i)?' <span class="text-emerald-600">✔</span>':''}</button>`).join('')||'<p class="text-xs text-slate-500">Ештеңе табылмады</p>';
+}
+async function libGen(s,topic){
+  const prompt='«'+s+'» пәні бойынша «'+topic+'» тақырыбына қазақ тілінде 8-9 сынып оқушысына арналған қысқа конспект жаз. Құрылымы: 1) Анықтама, 2) Негізгі ұғымдар немесе формулалар, 3) 1-2 мысал, 4) 3 қайталау сұрағы. 250 сөзден аспасын.';
+  const body={system:'Сен тәжірибелі мұғалімсің. Нақты, қарапайым және дұрыс жаз.',messages:[{role:'user',content:prompt}]};
+  try{
+    const ep=AI_URL();let txt='';
+    if(ep){const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok||!d.reply)throw 0;txt=d.reply;}
+    else{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:AIH(),body:JSON.stringify({model:AI_MODEL(),max_tokens:1000,...body})});const d=await r.json();txt=(d.content||[]).map(c=>c.type==='text'?c.text:'').join('\n').trim();if(!r.ok||!txt)throw 0;}
+    return txt;
+  }catch(e){return null;}
+}
+async function openLib(i){
+  const s=libSub,topic=LIBT[s][i],v=$('lib-view');
+  const card=(body,extra)=>{v.innerHTML=`<div class="p-5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-2"><div class="flex justify-between items-start gap-3"><h3 class="font-bold text-sm text-indigo-900">${s} • ${i+1}. ${esc(topic)}</h3><button onclick="$('lib-view').innerHTML=''" class="text-xs font-bold text-slate-500">✕</button></div><div class="text-xs text-slate-800">${body}</div>${extra||''}</div>`;v.scrollIntoView({behavior:'smooth',block:'nearest'});};
+  let txt=libGet(s,i);
+  if(!txt){
+    card('<i class="text-slate-500">Конспект дайындалуда...</i>');
+    txt=await libGen(s,topic);
+    if(txt){try{localStorage.setItem(libKey(s,i),txt);}catch(e){}renderLibList();}
+  }
+  if(txt)card(fmtAI(txt),'<p class="text-[10px] text-slate-500">Конспект ЖИ арқылы жасалды. Маңызды деректерді оқулықпен салыстырыңыз.</p>');
+  else card('<b>'+esc(topic)+'</b> — «'+s+'» пәнінің тақырыбы.<br><br>Толық конспект мәтінін жасау үшін ЖИ серверін қосу керек: AI-Тәлімгер бөлімінде «⚙ ЖИ баптау» батырмасын басыңыз. Конспект бір рет жасалып, құрылғыда сақталады.','<button onclick="switchTab(\'student\',\'ai-tutor\')" class="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl">AI-Тәлімгерге өту</button>');
+}
+
+// ===== ӘР КОНСПЕКТКЕ 1 ТҮСІНДІРМЕ =====
+async function libGen(s,topic,kind){
+  const prompt=kind==='x'
+    ?'«'+s+'» пәні бойынша «'+topic+'» тақырыбын оқушыға қарапайым тілмен, өмірден алынған бір мысалмен түсіндір. Тек бір абзац, 3-4 сөйлем.'
+    :'«'+s+'» пәні бойынша «'+topic+'» тақырыбына қазақ тілінде 8-9 сынып оқушысына арналған қысқа конспект жаз. Құрылымы: 1) Анықтама, 2) Негізгі ұғымдар немесе формулалар, 3) 1-2 мысал, 4) 3 қайталау сұрағы. 250 сөзден аспасын.';
+  const body={system:'Сен тәжірибелі мұғалімсің. Нақты, қарапайым және дұрыс жаз.',messages:[{role:'user',content:prompt}]};
+  try{
+    const ep=AI_URL();let txt='';
+    if(ep){const r=await fetch(ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok||!d.reply)throw 0;txt=d.reply;}
+    else{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:AIH(),body:JSON.stringify({model:AI_MODEL(),max_tokens:1000,...body})});const d=await r.json();txt=(d.content||[]).map(c=>c.type==='text'?c.text:'').join('\n').trim();if(!r.ok||!txt)throw 0;}
+    return txt;
+  }catch(e){return null;}
+}
+async function libFetch(s,i,kind){
+  const k=libKey(s,i)+(kind==='x'?':x':'');let v=null;
+  try{v=localStorage.getItem(k);}catch(e){}
+  if(v)return v;
+  v=await libGen(s,LIBT[s][i],kind);
+  if(v){try{localStorage.setItem(k,v);}catch(e){}}
+  return v;
+}
+async function openLib(i){
+  const s=libSub,topic=LIBT[s][i],v=$('lib-view');
+  const card=(body,extra)=>{v.innerHTML=`<div class="p-5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-2"><div class="flex justify-between items-start gap-3"><h3 class="font-bold text-sm text-indigo-900">${s} • ${i+1}. ${esc(topic)}</h3><button onclick="$('lib-view').innerHTML=''" class="text-xs font-bold text-slate-500">✕</button></div><div class="text-xs text-slate-800">${body}</div>${extra||''}</div>`;v.scrollIntoView({behavior:'smooth',block:'nearest'});};
+  card('<i class="text-slate-500">Конспект пен түсіндірме дайындалуда...</i>');
+  const [c,x]=await Promise.all([libFetch(s,i,'c'),libFetch(s,i,'x')]);
+  renderLibList();
+  if(c){
+    card(fmtAI(c)+(x?`<div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl"><p class="font-bold text-amber-800 mb-1">💡 Түсіндірме</p>${fmtAI(x)}</div>`:''),'<p class="text-[10px] text-slate-500">Конспект пен түсіндірме ЖИ арқылы жасалды. Маңызды деректерді оқулықпен салыстырыңыз.</p>');
+  }else card('<b>'+esc(topic)+'</b> — «'+s+'» пәнінің тақырыбы.<br><br>Конспект пен түсіндірме мәтінін жасау үшін ЖИ серверін қосу керек: AI-Тәлімгер бөлімінде «⚙ ЖИ баптау» батырмасын басыңыз. Мәтін бір рет жасалып, құрылғыда сақталады.','<button onclick="switchTab(\'student\',\'ai-tutor\')" class="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl">AI-Тәлімгерге өту</button>');
+}
+
+// ===== СУРЕТТЕР: SVG иллюстрациялар, пән карточкалары =====
+const SI={'Математика':['📐','#6366f1','#8b5cf6'],'Физика':['⚡','#f59e0b','#ef4444'],'Информатика':['💻','#0ea5e9','#6366f1'],'Химия':['🧪','#10b981','#14b8a6'],'Биология':['🧬','#84cc16','#16a34a'],'Қазақ тілі':['📖','#ec4899','#f43f5e'],'Ағылшын тілі':['🔤','#8b5cf6','#d946ef'],'Тарих':['🏛️','#b45309','#d97706'],'География':['🌍','#0891b2','#2563eb']};
+const HERO=h=>`<svg viewBox="0 0 240 170" height="${h}" xmlns="http://www.w3.org/2000/svg" class="float-anim"><circle cx="120" cy="90" r="70" fill="#fff" fill-opacity=".15"/><rect x="60" y="120" width="120" height="16" rx="3" fill="#f59e0b"/><rect x="70" y="104" width="100" height="16" rx="3" fill="#10b981"/><rect x="80" y="88" width="80" height="16" rx="3" fill="#ec4899"/><polygon points="120,34 172,57 120,80 68,57" fill="#1e1b4b"/><path d="M92 68v16c0 9 56 9 56 0V68l-28 12z" fill="#312e81"/><line x1="166" y1="59" x2="166" y2="84" stroke="#fbbf24" stroke-width="3"/><circle cx="166" cy="88" r="5" fill="#fbbf24"/><circle cx="204" cy="40" r="14" fill="#fde047"/><rect x="199" y="52" width="10" height="8" rx="2" fill="#fcd34d"/><path d="M38 40l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#fde047"/><path d="M196 120l2 5 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z" fill="#fde047" fill-opacity=".8"/></svg>`;
+const ROBOT='<svg viewBox="0 0 40 40" width="38" height="38"><line x1="20" y1="4" x2="20" y2="10" stroke="#fde047" stroke-width="2"/><circle cx="20" cy="4" r="2.5" fill="#fde047"/><rect x="7" y="10" width="26" height="22" rx="7" fill="#fff"/><circle cx="14.5" cy="20" r="3.2" fill="#4f46e5"/><circle cx="25.5" cy="20" r="3.2" fill="#4f46e5"/><rect x="14" y="26" width="12" height="2.5" rx="1.2" fill="#a5b4fc"/></svg>';
+function decorate(){
+  ['diag-select-box','tasks-grid','lib-grid'].forEach(id=>{const c=$(id);if(!c)return;
+    c.querySelectorAll('button').forEach(b=>{if(b.dataset.ic)return;const x=b.textContent.trim();const s=Object.keys(SI).find(k=>x.startsWith(k));const ic=s?SI[s][0]:(x.startsWith('Барлық пәндер')?'🎓':null);if(ic){b.dataset.ic=1;b.insertAdjacentHTML('afterbegin','<span class="mr-1">'+ic+'</span>');}});});
+}
+{const a=renderDiagSelect;renderDiagSelect=function(){a();decorate();};
+ const b=renderTasks;renderTasks=function(){b();decorate();};
+ const c=renderLib;renderLib=function(){c();decorate();};}
+function openSubject(s){libSub=s;libQ='';switchTab('student','library');}
+function renderGallery(){
+  const d=$('student-tab-dashboard');if(!d)return;
+  let g=$('subj-gallery');
+  if(!g){g=document.createElement('div');g.id='subj-gallery';d.children[0].insertAdjacentElement('afterend',g);}
+  const u=window.currentUser||{};
+  g.innerHTML=`<h3 class="font-bold text-base text-slate-800 mb-3">Пәндер галереясы</h3><div class="grid grid-cols-2 sm:grid-cols-3 gap-3">${Object.entries(SI).map(([s,v])=>{const r=u.diag&&u.diag[s];return `<button onclick="openSubject('${s}')" class="subj-tile text-left rounded-2xl p-4 text-white shadow-md" style="background:linear-gradient(135deg,${v[1]},${v[2]})"><div class="text-4xl">${v[0]}</div><div class="font-bold text-sm mt-2">${s}</div><div class="text-[11px] opacity-90">${r?pct(r)+'% • диагностика':'Конспект • Құралдар'}</div></button>`;}).join('')}</div>`;
+}
+{const a=renderDash;renderDash=function(){a();renderGallery();};}
+(function initArt(){
+  const card=document.querySelector('#auth-screen > div');
+  if(card&&!$('auth-art'))card.insertAdjacentHTML('afterbegin',`<div id="auth-art" class="-mx-6 -mt-6 sm:-mx-8 sm:-mt-8 rounded-t-3xl overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 flex justify-center py-3">${HERO(130)}</div>`);
+  const hero=document.querySelector('#student-tab-dashboard > div');
+  if(hero)hero.insertAdjacentHTML('beforeend',`<div class="hidden md:block absolute right-52 top-1/2 -translate-y-1/2 pointer-events-none">${HERO(120)}</div>`);
+  const ic=document.querySelector('#student-tab-ai-tutor [data-lucide="brain"]');
+  if(ic&&ic.parentElement){ic.parentElement.className='w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0';ic.parentElement.innerHTML=ROBOT;}
+})();
+
+// ===== ПӘН БОЙЫНША КӨМЕКШІ ҚҰРАЛДАР =====
+const TOOLS={
+'Информатика':[['Scratch','https://scratch.mit.edu','Блоктармен бағдарламалау: ойын мен анимация жасау','Практика'],['Code.org','https://code.org','Бағдарламалау сабақтары мен тапсырмалар','Курс'],['Replit','https://replit.com','Браузерде код жазып, Python/HTML іске қосу','Онлайн IDE'],['Python Tutor','https://pythontutor.com','Python кодының орындалуын қадам-қадам көру','Визуализация'],['W3Schools','https://www.w3schools.com','HTML, CSS, Python, SQL бойынша мысалдар мен жаттығулар','Практика'],['freeCodeCamp','https://www.freecodecamp.org','Тегін интерактивті бағдарламалау курстары','Курс'],['Tinkercad','https://www.tinkercad.com','3D модельдеу және Arduino схемаларын онлайн құру','Модельдеу'],['GitHub','https://github.com','Жобаларды сақтау және ашық кодпен танысу','Жоба']],
+'Математика':[['GeoGebra','https://www.geogebra.org','Геометрия, график және алгебра бойынша интерактив','Интерактив'],['Desmos','https://www.desmos.com/calculator','Функциялардың графигін онлайн салу','Графика'],['Khan Academy','https://www.khanacademy.org/math','Видеосабақтар мен жаттығулар','Курс'],['Symbolab','https://www.symbolab.com','Теңдеулерді қадам-қадам шешу','Есеп шешу'],['Wolfram Alpha','https://www.wolframalpha.com','Есептеу және өрнектерді тексеру','Калькулятор']],
+'Физика':[['PhET','https://phet.colorado.edu','Физикалық құбылыстардың интерактивті симуляциялары','Симуляция'],['Khan Academy Physics','https://www.khanacademy.org/science/physics','Физика бойынша сабақтар мен жаттығулар','Курс'],['The Physics Classroom','https://www.physicsclassroom.com','Тақырыптық түсіндірмелер мен тапсырмалар','Оқулық'],['Falstad','https://www.falstad.com/mathphysics.html','Электр тізбектері мен толқындардың симуляциясы','Симуляция']],
+'Химия':[['PhET Chemistry','https://phet.colorado.edu','Химиялық симуляциялар мен виртуалды тәжірибелер','Симуляция'],['ChemCollective','https://chemcollective.org','Виртуалды зертхана жұмыстары','Зертхана'],['Ptable','https://ptable.com','Интерактивті периодтық жүйе','Анықтамалық'],['PubChem','https://pubchem.ncbi.nlm.nih.gov','Қосылыстардың қасиеттері мен формулалары','Деректер базасы'],['MolView','https://molview.org','Молекулалардың 3D құрылымын көру','3D модель'],['Khan Academy Chemistry','https://www.khanacademy.org/science/chemistry','Химия бойынша видеосабақтар','Курс']],
+'Биология':[['Khan Academy Biology','https://www.khanacademy.org/science/biology','Биология бойынша сабақтар мен жаттығулар','Курс'],['BioInteractive','https://www.biointeractive.org','Фильмдер, анимация және виртуалды зертханалар','Интерактив'],['Learn.Genetics','https://learn.genetics.utah.edu','Генетика мен жасуша бойынша интерактивтер','Интерактив'],['BioDigital Human','https://www.biodigital.com','Адам ағзасының 3D моделі','3D модель'],['Labster','https://www.labster.com','Виртуалды ғылыми зертханалар','Зертхана']],
+'Қазақ тілі':[['Sozdik.kz','https://sozdik.kz','Қазақша онлайн сөздік','Сөздік'],['Тілқазына','https://tilqazyna.kz','Қазақ тілін дамыту орталығы, материалдар','Ресурс'],['Терминком','https://termincom.kz','Қазақ тіліндегі терминдер базасы','Терминдер'],['Абай.kz','https://abai.kz','Абай мұрасы мен әдеби материалдар','Әдебиет'],['Қазақша Уикипедия','https://kk.wikipedia.org','Қазақ тіліндегі энциклопедия','Энциклопедия']],
+'Ағылшын тілі':[['Duolingo','https://www.duolingo.com','Күнделікті қысқа жаттығулар арқылы тіл үйрену','Практика'],['BBC Learning English','https://www.bbc.co.uk/learningenglish','Грамматика, лексика және тыңдалым','Курс'],['British Council LearnEnglish','https://learnenglish.britishcouncil.org','Деңгей бойынша тапсырмалар мен оқу материалдары','Курс'],['Cambridge Dictionary','https://dictionary.cambridge.org','Ағылшын сөздігі және айтылуы','Сөздік'],['Quizlet','https://quizlet.com','Сөздерді карточкалар арқылы жаттау','Карточкалар']],
+'Тарих':[['Khan Academy World History','https://www.khanacademy.org/humanities/world-history','Дүниежүзі тарихы бойынша сабақтар','Курс'],['Britannica','https://www.britannica.com','Тарихи оқиғалар мен тұлғалар энциклопедиясы','Энциклопедия'],['Google Arts & Culture','https://artsandculture.google.com','Музейлердің виртуалды көрмелері','Виртуалды музей'],['Қазақша Уикипедия','https://kk.wikipedia.org','Қазақстан тарихы бойынша мақалалар','Энциклопедия'],['Ұлттық музей','https://nationalmuseum.kz','Қазақстан Республикасының Ұлттық музейі','Музей']],
+'География':[['Google Earth','https://earth.google.com','Жер бетін 3D форматта зерттеу','Карта'],['National Geographic Education','https://education.nationalgeographic.org','Карталар, мақалалар және сабақ материалдары','Ресурс'],['Windy','https://www.windy.com','Ауа райы мен желдердің тірі картасы','Ауа райы'],['GeoGuessr','https://www.geoguessr.com','Орынды карта бойынша тану ойыны','Ойын'],['Worldometer','https://www.worldometers.info','Халық саны мен әлем статистикасы','Статистика']]};
+function renderTools(){
+  const g=$('lib-grid');if(!g)return;const old=$('lib-tools');if(old)old.remove();
+  const items=TOOLS[libSub]||[];
+  const html=`<div id="lib-tools" class="p-4 bg-white border border-slate-200 rounded-2xl"><h3 class="font-bold text-sm text-slate-800 mb-3">🛠 Көмекші құралдар: ${libSub}</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${items.map(x=>`<a href="${x[1]}" target="_blank" rel="noopener noreferrer" class="block p-3 border border-slate-200 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition"><div class="flex justify-between items-center gap-2"><span class="font-bold text-xs text-indigo-700">${x[0]} ↗</span><span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full flex-shrink-0">${x[3]}</span></div><p class="text-[11px] text-slate-600 mt-1">${x[2]}</p></a>`).join('')}</div></div>`;
+  const s=$('lib-search');if(s)s.insertAdjacentHTML('beforebegin',html);
+}
+{const a=renderLib;renderLib=function(){a();renderTools();};}
+
+// ===== ДАЙЫН ТҮСІНІКТЕМЕЛЕР (ЖИ серверінсіз) =====
+const EXPL={'Информатика':["Ақпарат — бізді қоршаған дүние туралы мәліметтер. Ол мәтін, сан, сурет, дыбыс, бейне түрінде беріледі. Қасиеттері: мәнділік, анықтық, толықтық, өзектілік.", "Ақпараттың ең кіші өлшем бірлігі — бит (0 немесе 1). 1 байт = 8 бит, 1 Кбайт = 1024 байт, 1 Мбайт = 1024 Кбайт, 1 Гбайт = 1024 Мбайт.", "Санау жүйесі — сандарды жазу тәсілі. Ондық жүйеде 10 цифр (0–9), екілікте 2 цифр (0, 1), сегіздікте 8, он алтылықта 16 таңба (0–9 және A–F) қолданылады.", "Екілік жүйеде сан тек 0 мен 1-ден жазылады. Ондыққа аудару үшін әр разряд 2-нің дәрежесіне көбейтіледі. Мысалы, 101₂ = 1·4 + 0·2 + 1·1 = 5.", "Компьютер негізгі бөліктерден тұрады: процессор, жад, енгізу және шығару құрылғылары, сыртқы жад. Барлығы аналық платаға жалғанады.", "Процессор (CPU) — компьютердің «миы», командаларды орындайды. Жылдамдығы тактілік жиілікпен (ГГц) және ядро санымен сипатталады.", "Оперативті жад (RAM) бағдарлама жұмыс істеп тұрғанда деректерді уақытша сақтайды, ток өшсе өшіп қалады. Тұрақты жад (HDD, SSD, флешка) деректерді ұзақ сақтайды.", "Енгізу құрылғылары компьютерге ақпарат береді: пернетақта, тінтуір, микрофон, сканер, веб-камера, сенсорлық экран.", "Шығару құрылғылары нәтижені көрсетеді: монитор, принтер, динамик, проектор, құлаққап.", "Операциялық жүйе (Windows, Linux, macOS, Android) құрылғыларды басқарады және бағдарламалардың жұмысын қамтамасыз етеді. Ол пайдаланушы мен құрылғының арасындағы делдал.", "Файл — аты бар деректер жиыны, түрі кеңейтімі арқылы анықталады (.docx, .jpg, .mp3). Қалта (папка) файлдарды реттеп сақтауға арналған.", "Қолданбалы бағдарламалар нақты тапсырма орындайды: мәтін жазу, есептеу, сурет салу, ойын, интернетті қарау. Олар операциялық жүйеде жұмыс істейді.", "Мәтіндік редактор (Word, Google Docs) мәтінді теруге, өңдеуге және пішімдеуге арналған: қаріп, абзац, тізім, кесте, сурет қосу, емлені тексеру.", "Электрондық кесте (Excel, Google Sheets) деректерді торлар түрінде өңдейді. Тор мекенжайы бағана әрпі мен жол нөмірінен тұрады, мысалы B3.", "Excel формуласы «=» белгісінен басталады: =A1+B1, =SUM(A1:A5), =AVERAGE(B1:B10), =MAX(C1:C8). Мәндер өзгергенде формула нәтижені өздігінен қайта есептейді.", "Диаграмма сандық деректерді көрнекі көрсетеді: бағанды диаграмма салыстыруға, сызықтық — өзгерісті көруге, дөңгелек — үлесті көрсетуге қолайлы.", "Презентация — слайдтар тізбегі (PowerPoint, Google Slides). Жақсы слайдта мәтін қысқа, қаріп оқылатын, суреттер тақырыпқа сай болады.", "Графикалық редактор суретті жасайды және өңдейді. Негізгі құралдар: қылқалам, өшіргіш, бояу, таңдау, қабаттар, мәтін.", "Растрлық сурет пиксельдерден тұрады (JPG, PNG). Үлкейткенде сапасы төмендейді, фотосуретке қолайлы.", "Векторлық сурет сызықтар мен фигуралардың формулаларынан тұрады (SVG). Үлкейткенде сапасы бұзылмайды, логотип пен сызбаға қолайлы.", "Дыбыс пен бейне цифрлық түрде сақталады. Форматтары: MP3, WAV (дыбыс), MP4, AVI (бейне). Сапа жиілікке, кадр жиілігіне және сығу дәрежесіне байланысты.", "Компьютерлік желі — өзара байланысқан компьютерлер жиыны. Жергілікті желі (LAN) шағын аймақты, интернет бүкіл әлемді қамтиды.", "IP-мекенжай желідегі құрылғыны анықтайды, мысалы 192.168.0.1 (IPv4: төрт сан, әрқайсысы 0–255). Домендік атау (google.com) мекенжайды есте сақтауға ыңғайлы етеді.", "Браузер (Chrome, Firefox, Edge) веб-беттерді көрсетеді. Іздеуде нақты кілт сөздерді қолданыңыз, дәл тіркесті тырнақшаға алыңыз, сенімді дереккөзді таңдаңыз.", "Электрондық пошта мекенжайы: аты@домен.kz. Хатта кімге, тақырып, мәтін және тіркеме болады. Белгісіз жіберушінің сілтемесі мен файлын ашпаңыз.", "Киберқауіпсіздік — деректер мен құрылғыларды қорғау. Ережелер: күшті құпия сөз, жүйені жаңарту, антивирус, күдікті сілтемеге кірмеу, жеке деректерді жарияламау.", "Компьютерлік вирус — өздігінен көбейіп, зиян келтіретін бағдарлама. Түрлері: құрт, троян, шпион бағдарлама. Қорғану: антивирус және лицензиялы бағдарлама.", "Күшті құпия сөз ұзын болады (кемі 12 таңба), әріп, сан, белгіден тұрады, есім мен туған күнді қолданбайды. Әр сайтқа бөлек құпия сөз қою керек.", "Авторлық құқық шығарма авторының мүддесін қорғайды. Басқаның мәтінін, суретін, музыкасын рұқсатсыз пайдалануға болмайды, дереккөзді көрсету керек.", "Алгоритм — есепті шешуге арналған нақты, ретті әрекеттер тізбегі. Қасиеттері: дискреттілік, түсініктілік, анықтық, нәтижелілік, жалпылық.", "Блок-схема алгоритмді фигуралармен бейнелейді: сопақша — басы/соңы, төртбұрыш — әрекет, ромб — шарт, параллелограмм — енгізу/шығару. Фигуралар көрсеткімен жалғанады.", "Алгоритмнің үш түрі бар: сызықтық (әрекеттер ретімен), тармақталатын (шартқа қарай таңдау), циклдік (әрекет қайталанады).", "Айнымалы — аты бар, мәні өзгеретін жад ұяшығы. Python-да: x = 5, аты = \"Айгерім\". Жаңа мән берілгенде ескісі жоғалады.", "Негізгі деректер типтері: int (бүтін), float (нақты), str (жол), bool (True/False). Тип амалды анықтайды: 5+3 = 8, ал \"5\"+\"3\" = \"53\".", "Шартты оператор таңдау жасайды: if шарт: ... else: ... . Мысалы: if x > 0: print(\"оң\") else: print(\"оң емес\").", "Цикл әрекетті қайталайды. for i in range(5) — 5 рет (0–4). while шарт — шарт ақиқат болғанша қайталайды. Шексіз циклден сақ болыңыз.", "Массив (Python-да тізім) бірнеше мәнді сақтайды: a = [3, 7, 1]. Элемент индекспен алынады: a[0] = 3, индекс нөлден басталады. len(a) — ұзындығы.", "Функция — аты бар, қайта қолданылатын код блогы: def қосу(a, b): return a + b. Шақыру: қосу(2, 3) → 5. Ол кодты қысқартады.", "Python — оқуға жеңіл бағдарламалау тілі. print(\"Сәлем\") экранға шығарады, input() деректі енгізеді, шегініс код блогын көрсетеді, түсініктеме # белгісінен басталады.", "Жол (str) — таңбалар тізбегі. s = \"Алматы\": len(s) = 6, s[0] = \"А\", s + \"!\" біріктіреді, s.upper() бас әріпке айналдырады, s[1:3] кесінді береді.", "Python-да файл open() арқылы ашылады: with open(\"a.txt\", \"r\") as f: text = f.read(). Режимдер: \"r\" — оқу, \"w\" — жазу, \"a\" — соңына қосу. with файлды өздігінен жабады.", "Логика алгебрасы (Буль алгебрасы) тұжырымның ақиқат (1) немесе жалған (0) екенін зерттейді. Негізі — ЖӘНЕ, НЕМЕСЕ, ЕМЕС амалдары.", "Логикалық амалдар: ЕМЕС мәнді қарама-қарсыға өзгертеді; ЖӘНЕ екеуі де ақиқат болғанда ақиқат; НЕМЕСЕ біреуі ақиқат болса ақиқат. Нәтиже ақиқаттық кестесімен көрсетіледі.", "Деректер базасы — ретпен сақталған байланысты деректер. Кестеде жол (жазба) мен баған (өріс) болады, бірегей кілт әр жазбаны ажыратады. SQL тілі деректерді іздейді және өзгертеді.", "HTML — веб-бет құрылымын сипаттайтын тіл. Тегтер: <h1> тақырып, <p> абзац, <a href> сілтеме, <img src> сурет, <ul><li> тізім. Бет <html>, <head>, <body> бөліктерінен тұрады.", "CSS веб-беттің сыртқы түрін береді: color — мәтін түсі, background — фон, font-size — қаріп өлшемі, margin мен padding — аралықтар. Селектор элементті таңдайды: p { color: blue; }.", "Робот датчиктер (қабылдау), контроллер (шешім) және жетектер (қозғалыс) арқылы жұмыс істейді. Оның әрекетін бағдарлама басқарады, мысалы Arduino платасы арқылы.", "Жасанды интеллект — адам ойлауын қажет ететін міндеттерді орындайтын жүйе. Машиналық оқыту деректерден заңдылықты өздігінен табады. Қолданылуы: аударма, дауысты тану, ұсыныстар. Нәтижесін әрқашан тексеру керек.", "Деректерді талдау — деректерді жинау, тазалау және қорытынды шығару. Көрсеткіштер: орташа, ең үлкен және ең кіші мән, медиана. Нәтиже кесте мен диаграммамен беріледі.", "Криптография ақпаратты шифрлау арқылы қорғайды. Цезарь шифры әр әріпті алфавитте бірнеше орынға жылжытады: жылжу 3 болса, А → Г. Қазіргі шифрлау ашық және құпия кілттерге негізделген."]};
+const _openLibAI=openLib;
+async function libFull(i){
+  const b=$('lib-full-btn');if(b){b.disabled=true;b.textContent='Дайындалуда...';}
+  const c=await libFetch(libSub,i,'c');
+  if(c){renderLibList();openLib(i);}else{if(b){b.disabled=false;b.textContent='ЖИ арқылы толық конспект алу';}toast('ЖИ серверін қосыңыз (AI-Тәлімгердегі «⚙ ЖИ баптау»)');}
+}
+async function openLib(i){
+  const s=libSub,ex=(EXPL[s]||[])[i];
+  if(!ex)return _openLibAI(i);
+  const topic=LIBT[s][i],v=$('lib-view'),full=libGet(s,i);
+  v.innerHTML=`<div class="p-5 bg-indigo-50/60 border border-indigo-200 rounded-2xl space-y-3"><div class="flex justify-between items-start gap-3"><h3 class="font-bold text-sm text-indigo-900">${SI[s]?SI[s][0]+' ':''}${s} • ${i+1}. ${esc(topic)}</h3><button onclick="$('lib-view').innerHTML=''" class="text-xs font-bold text-slate-500">✕</button></div><div class="p-3 bg-white border border-indigo-200 rounded-xl text-xs text-slate-800"><p class="font-bold text-indigo-800 mb-1">📘 Түсініктеме</p>${fmtAI(ex)}</div>${full?`<div class="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800"><p class="font-bold text-slate-700 mb-1">📝 Толық конспект (ЖИ)</p>${fmtAI(full)}</div>`:`<button id="lib-full-btn" onclick="libFull(${i})" class="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl">ЖИ арқылы толық конспект алу</button>`}</div>`;
+  v.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+</script>
+
+<div id="fs-ctrl" class="fixed bottom-4 right-4 z-50 flex items-center gap-1 bg-white border border-slate-300 rounded-xl shadow-lg p-1">
+    <button onclick="fsAdj(-0.1)" title="Әріпті кішірейту" class="w-9 h-9 rounded-lg hover:bg-slate-100 text-slate-700">A−</button>
+    <button onclick="fsAdj(0)" title="Әдепкі өлшем" class="w-9 h-9 rounded-lg hover:bg-slate-100 text-slate-700">A</button>
+    <button onclick="fsAdj(0.1)" title="Әріпті үлкейту" class="w-9 h-9 rounded-lg bg-indigo-600 text-white">A+</button>
+</div>
+<script>
+(function(){
+  let s=1;try{s=parseFloat(localStorage.getItem('aisana_fs'))||1;}catch(e){}
+  const ap=()=>document.documentElement.style.setProperty('--fs',s);
+  window.fsAdj=d=>{s=d===0?1:Math.min(1.5,Math.max(0.85,+(s+d).toFixed(2)));ap();try{localStorage.setItem('aisana_fs',s);}catch(e){}};
+  ap();
+})();
+</script>
+</body>
+</html>
